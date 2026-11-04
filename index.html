@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="light dark">
+<title>iOS Jailed Environment</title>
+<style>
+:root{--k:1;--ic:calc(60px*var(--k));--mx:calc(27px*var(--k));--gap:calc((100vw - 2*var(--mx) - 4*var(--ic))/3);--dock-mx:calc(12px*var(--k));--safe-t:max(env(safe-area-inset-top,0px),calc(20px*var(--k)));--safe-b:env(safe-area-inset-bottom,0px);--dock-h:calc(96px*var(--k));--dock-b:calc(var(--safe-b)*.5 + 8px*var(--k));--row-gap:calc(21px*var(--k));--lib-mx:calc(20px*var(--k));--font:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+--bg:#f2f2f7;--cell:#fff;--tx:#000;--sec:#8a8a8e;--sep:rgba(60,60,67,.18);--blue:#007aff;--nav:rgba(242,242,247,.78);--ease:cubic-bezier(.2,.9,.25,1)}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--cell:#1c1c1e;--tx:#fff;--sec:#8e8e93;--sep:rgba(84,84,88,.6);--blue:#0a84ff;--nav:rgba(20,20,22,.78)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;position:fixed;inset:0;width:100%;background:#000;font-family:var(--font);overscroll-behavior:none;touch-action:none;-webkit-text-size-adjust:100%}
+#screen{position:fixed;inset:0;overflow:hidden;background:#000}
+#wall{position:absolute;inset:-6%;background:#8c8c90 center/cover no-repeat;will-change:filter}
+#home{position:absolute;inset:0;transition:transform .38s var(--ease),opacity .3s;transform-origin:50% 50%}
+#home.away{transform:scale(1.12);opacity:0;pointer-events:none}
+#pager{position:absolute;inset:0;touch-action:pan-y;overflow:hidden}
+#track{display:flex;height:100%;will-change:transform}
+.page{flex:0 0 100%;width:100%;height:100%;position:relative}
+.grid{display:grid;grid-template-columns:repeat(4,var(--ic));column-gap:var(--gap);justify-content:center;align-content:start;row-gap:var(--row-gap);padding:calc(var(--safe-t) + 24px*var(--k)) 0 0}
+.app{width:var(--ic);display:flex;flex-direction:column;align-items:center;gap:calc(6px*var(--k));cursor:pointer;touch-action:pan-y}
+.app .ic{width:var(--ic)}
+.app span{color:#fff;font-size:12px;line-height:13px;height:13px;text-align:center;width:calc(var(--ic) + 16px*var(--k));text-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ic{aspect-ratio:1;border-radius:22.4%;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.3),0 7px 16px -2px rgba(0,0,0,.34);transition:transform .22s var(--ease),filter .22s}
+.ic::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;padding:1.3px;background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(255,255,255,.1) 36%,rgba(255,255,255,.05) 64%,rgba(255,255,255,.6));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.ic svg{display:block;width:100%;height:100%;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
+.ic::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:radial-gradient(90% 62% at 28% -4%,rgba(255,255,255,.5),rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0) 46%,rgba(255,255,255,.1));box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -3px 7px rgba(255,255,255,.2),inset 0 0 18px rgba(255,255,255,.1),inset 0 -1px 1px rgba(0,0,0,.22)}
+[data-id]:active .ic,.ic[data-id]:active{transform:scale(.88);filter:brightness(.72)}
+.glass{background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.4),inset 0 1px 0 rgba(255,255,255,.5),inset 0 -8px 16px -10px rgba(255,255,255,.25),0 8px 28px rgba(0,0,0,.18)}
+#dock{position:absolute;left:var(--dock-mx);right:var(--dock-mx);bottom:var(--dock-b);height:var(--dock-h);border-radius:calc(35px*var(--k));display:flex;align-items:center;justify-content:center;gap:var(--gap);will-change:opacity,transform}
+#dock .app span{display:none}
+#dots{position:absolute;left:0;right:0;bottom:calc(var(--dock-b) + var(--dock-h) + 14px*var(--k));display:flex;justify-content:center;gap:9px;pointer-events:none}
+#dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .25s,transform .25s}
+#dots i.on{background:#fff;transform:scale(1.08)}
+.lib{overflow-y:auto;overflow-x:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-t) + 8px*var(--k)) var(--lib-mx) calc(var(--safe-b) + 56px*var(--k));scrollbar-width:none}
+.lib::-webkit-scrollbar{display:none}
+.search{display:flex;align-items:center;gap:8px}
+.sbox input::-webkit-search-cancel-button{display:none}.sbox input{-webkit-appearance:none}.sbox{flex:1;height:calc(36px*var(--k));border-radius:calc(18px*var(--k));display:flex;align-items:center;gap:7px;padding:0 12px;color:rgba(255,255,255,.75)}
+.sbox input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:17px var(--font);-webkit-user-select:text;user-select:text}
+.sbox input::placeholder{color:rgba(255,255,255,.7)}
+.cancel{color:#fff;font-size:17px;display:none;cursor:pointer}
+.searching .cancel{display:block}.searching .cats{display:none}.searching .results{display:block}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:calc(24px*var(--k)) calc(22px*var(--k));margin-top:calc(22px*var(--k))}
+.tile{display:flex;flex-direction:column;gap:calc(6px*var(--k));align-items:center}
+.tile b{font-weight:400;color:#fff;font-size:12.5px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.tbox{width:100%;aspect-ratio:1;border-radius:calc(26px*var(--k));padding:calc(13px*var(--k));display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:calc(11px*var(--k))}
+.tbox .ic{width:100%;border-radius:22.4%}
+.cluster{display:grid;grid-template-columns:1fr 1fr;gap:3px;aspect-ratio:1}
+.cluster .ic{border-radius:22%;box-shadow:none}
+.results{display:none;margin-top:18px;border-radius:22px;overflow:hidden}
+.rrow{display:flex;align-items:center;gap:14px;padding:9px 14px;color:#fff;font-size:17px;cursor:pointer}
+.rrow+.rrow{box-shadow:inset 0 .5px 0 rgba(255,255,255,.25)}
+.rrow .ic{width:42px}
+.empty{padding:22px;text-align:center;color:rgba(255,255,255,.8);font-size:15px}
+#appview{position:absolute;inset:0;display:none;background:var(--bg);color:var(--tx);overflow:hidden;will-change:transform,clip-path;z-index:20}
+#appc{position:absolute;inset:0;opacity:0;transition:opacity .22s}
+#appc.on{opacity:1;transition:opacity .22s .08s}
+.nav{position:absolute;top:0;left:0;right:0;z-index:2;height:calc(var(--safe-t) + 44px);padding-top:var(--safe-t);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:17px;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;transition:background .2s}
+.nav span{opacity:0;transition:opacity .2s}
+.nav.on{background:var(--nav);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 .5px 0 var(--sep)}
+.nav.on span{opacity:1}
+.scroll{position:absolute;inset:0;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-t) + 20px) 0 calc(var(--safe-b) + 56px)}#splash{position:absolute;left:0;right:0;top:50%;aspect-ratio:1;transform:translateY(-50%);z-index:5;pointer-events:none;will-change:opacity}#splash svg{display:block;width:100%;height:100%}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 24px 22px}
+.hero .ic{width:84px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.hero h1{font-size:26px;line-height:1.15;margin:16px 0 4px;font-weight:700;letter-spacing:-.4px}
+.hero p{margin:0;color:var(--sec);font-size:17px}.mono{margin-top:12px;font:12px ui-monospace,"SF Mono",Menlo,monospace;color:var(--sec);background:var(--cell);padding:4px 10px;border-radius:8px}
+.gh{margin:22px 32px 7px;font-size:13px;color:var(--sec);text-transform:none}
+.gf{margin:7px 32px 0;font-size:13px;color:var(--sec);line-height:1.35}
+.group{margin:0 16px;background:var(--cell);border-radius:20px;overflow:hidden}
+.row{display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:0 16px;font-size:17px;position:relative;gap:12px}
+.row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.row b{font-weight:400;color:var(--sec);display:flex;align-items:center;gap:7px;text-align:right}
+.dot{width:9px;height:9px;border-radius:50%;background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.22)}
+.btn{color:var(--blue);cursor:pointer}.btn.red{color:#ff3b30}
+.btn:active{background:var(--sep)}
+.thumb{width:44px;height:72px;border-radius:9px;background:#8c8c90 center/cover;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);flex:none}
+.row.tall{min-height:92px}
+.chev{color:var(--sec);font-size:20px;line-height:1}
+#hi{position:absolute;left:0;right:0;bottom:0;height:max(var(--safe-b),calc(30px*var(--k)));z-index:50;display:flex;align-items:flex-end;justify-content:center;touch-action:none}
+#hi i{display:block;width:calc(134px*var(--k));height:5px;border-radius:3px;background:#fff;margin-bottom:calc(8px*var(--k));box-shadow:0 0 6px rgba(0,0,0,.25);transition:transform .2s var(--ease),background .3s,opacity .2s}
+#hi.press i{transform:scaleX(.88)}
+body.inapp #hi i{background:var(--tx);box-shadow:none}
+body.inapp #hi{height:calc(max(var(--safe-b),34px*var(--k)) + 56px*var(--k))}
+.seg{display:flex;margin:0 16px 16px;background:var(--sep);border-radius:9px;padding:2px}.seg b{flex:1;text-align:center;font-size:13px;font-weight:600;padding:6px 0;border-radius:7px;cursor:pointer}.seg b.on{background:var(--cell);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.pk{padding:10px 16px;min-height:62px}.pk div{display:flex;flex-direction:column;gap:2px;min-width:0}.pk small{color:var(--sec);font-size:13px}.gbtn{background:rgba(0,122,255,.14);color:var(--blue);font-weight:600;font-size:14px;border-radius:15px;padding:5px 14px;min-width:72px;text-align:center;cursor:pointer;flex:none}.gbtn.rm{color:#ff3b30;background:rgba(255,59,48,.12)}.gbtn.dis{opacity:.5;pointer-events:none}
+.jb{margin:6px 16px 0}.bar{height:6px;border-radius:3px;background:var(--sep);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:3px;transition:width .5s var(--ease)}.jlog{margin-top:12px;font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--sec);min-height:64px;white-space:pre-wrap}.jbtnw{padding:14px 16px 0}.jbtn{width:100%;height:50px;border:0;border-radius:14px;background:var(--blue);color:#fff;font:600 17px var(--font);cursor:pointer;transition:transform .15s,opacity .2s}.jbtn:active{transform:scale(.97)}.jbtn:disabled{opacity:.5}
+#appview.dark{--bg:#000;--cell:#1c1c1e;--tx:#fff;--sec:#8e8e93;--sep:rgba(84,84,88,.6);--nav:rgba(0,0,0,.7)}body.dk #hi i{background:#fff}
+.term{padding:2px 16px 0;font:13.5px/1.45 ui-monospace,"SF Mono",Menlo,monospace;color:#e6e6e6;min-height:100%;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}.term .p{color:#5ef08a;white-space:nowrap}.term .d{color:#8e8e93}.tl{display:flex;gap:7px}.term input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:16px ui-monospace,Menlo,monospace;padding:0}
+.jbv>*{animation:rise .55s var(--ease) both;animation-delay:calc(var(--n,0)*70ms)}@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+#jic.run{animation:pulse 1.1s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.07)}}
+.jbv .group{margin:0 16px}.jbv .gh{margin-top:24px}.jbtnw{padding:26px 16px 0}.jbv .gf{margin-top:14px}
+.bar{height:4px;border-radius:0}.bar i{border-radius:0}
+.stp u{width:22px;height:22px;border-radius:50%;border:2px solid var(--sep);flex:none;position:relative;transition:background .25s,border-color .25s}
+.stp.pend span{color:var(--sec)}.stp span{transition:color .3s}
+.stp.run u{border-color:var(--sep);border-top-color:var(--blue);animation:spin .8s linear infinite}
+.stp.ok u{background:#34c759;border-color:#34c759}.stp.ok u::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg);animation:tk .3s var(--ease)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes tk{from{transform:rotate(45deg) scale(0)}}
+.jdone{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.jdone svg{width:58px;height:58px;margin-bottom:6px;animation:pop2 .5s var(--ease)}.jdone b{font-size:20px}.jdone small{color:var(--sec);font-size:14px}
+.tick{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .5s .15s var(--ease) forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.sl{min-height:100%}.sv{padding-bottom:90px;animation:fade .25s}@keyframes fade{from{opacity:0}}@keyframes pop2{from{transform:scale(.75);opacity:0}}
+.lt{font-size:34px;font-weight:700;letter-spacing:-.5px;margin:6px 16px 14px}
+.pk div{flex:1}.pi{width:40px;height:40px;border-radius:22%;display:flex;align-items:center;justify-content:center;color:#fff;font:600 18px var(--font);flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}.pi.big{width:64px;height:64px;font-size:28px}
+.ban{display:flex;gap:12px;overflow-x:auto;padding:0 16px 4px;scroll-snap-type:x mandatory;touch-action:pan-x pan-y;scrollbar-width:none}.ban::-webkit-scrollbar{display:none}
+.ban>div{flex:0 0 78%;height:132px;border-radius:20px;padding:16px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;scroll-snap-align:start}.ban b{font-size:20px}.ban small{opacity:.85;font-size:14px}
+.dh{display:flex;align-items:center;gap:14px;padding:0 16px 4px}.dh div{flex:1;min-width:0}.dh h3{margin:0;font-size:22px}.dh small{color:var(--sec)}.back{color:var(--blue);font-size:17px;padding:0 16px 14px;cursor:pointer}
+.sq{padding:0 16px 8px}.sq input{width:100%;height:38px;border-radius:10px;border:0;background:var(--sep);color:var(--tx);font:17px var(--font);padding:0 12px;outline:0;-webkit-appearance:none;-webkit-user-select:text;user-select:text}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:3;display:flex;padding:7px 4px calc(var(--safe-b)*.55 + 5px);background:var(--nav);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 -.5px 0 var(--sep)}
+.tabbar div{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--sec);cursor:pointer;transition:color .2s}.tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.tabbar .on{color:var(--blue)}.tabbar .on svg{animation:pop2 .35s var(--ease)}
+.qbar{position:fixed;left:12px;right:12px;bottom:calc(58px + var(--safe-b)*.55 + 8px);z-index:3;display:flex;align-items:center;justify-content:space-between;padding:9px 10px 9px 16px;border-radius:22px;background:var(--nav);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 4px 18px rgba(0,0,0,.2),inset 0 0 0 .5px var(--sep);font-size:15px;font-weight:500;animation:rise .35s var(--ease)}
+.cons{position:fixed;inset:0;z-index:4;background:#000;color:#e6e6e6;padding:calc(var(--safe-t) + 16px) 16px calc(var(--safe-b) + 110px);display:flex;flex-direction:column}.cons pre{flex:1;margin:0;overflow:auto;font:13px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap}#cbtn{position:absolute;left:16px;right:16px;bottom:calc(var(--safe-b) + 64px);text-align:center}
+@media (prefers-reduced-motion:reduce){#home,.ic{transition:none}}
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="wall"></div>
+  <div id="home">
+    <div id="pager"><div id="track"></div></div>
+    <div id="dots"></div>
+    <div id="dock" class="glass"></div>
+  </div>
+  <div id="appview">
+    <div id="appc"><div class="nav"><span id="ntitle"></span></div><div class="scroll" id="ascroll"></div></div><div id="splash"></div>
+  </div>
+  <div id="hi"><i></i></div>
+</div>
+<script>
+/* ============ APPLICATION REGISTRY ============
+   Add an app by pushing one object. Everything else (Home Screen,
+   Dock, App Library, search) is generated from this list.
+   { id, name, category, dock?, icon:{bg, svg}, content(api) -> Node | string }  */
+const APPS = [
+  {
+    id: 'env.jailed.sysinfo',
+    name: 'iOS Jailed Environment',
+    category: 'System',
+    icon: {
+      bg: 'linear-gradient(160deg,#4a5068 0%,#262a3a 55%,#12141d 100%)',
+      svg: '<svg viewBox="0 0 60 60"><defs><radialGradient id="gi" cx=".35" cy=".25" r=".95"><stop offset="0" stop-color="#9dbcff"/><stop offset="1" stop-color="#2b52d6"/></radialGradient></defs><circle cx="30" cy="30" r="19" fill="url(#gi)"/><circle cx="30" cy="30" r="18.4" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.2"/><circle cx="30" cy="22.4" r="2.7" fill="#fff"/><rect x="27.9" y="27.2" width="4.2" height="13" rx="2.1" fill="#fff"/></svg>'
+    },
+    content(api) {
+      const el = document.createElement('div');
+      el.innerHTML = `
+        <div class="hero"><div class="ic" style="background:${this.icon.bg}">${this.icon.svg}</div>
+          <h1>iOS Jailed Environment</h1><p>Custom iOS Environment</p><code class="mono">${this.id}</code></div>
+        <div class="group">
+          <div class="row"><span>Environment</span><b>Jailed</b></div>
+          <div class="row"><span>Environment Type</span><b>Custom</b></div><div class="row"><span>System</span><b>iOS 27 Inspired</b></div><div class="row"><span>Package Ecosystem</span><b>Procursus Inspired</b></div>
+          <div class="row"><span>Interface</span><b>Nyxian Inspired</b></div><div class="row"><span>Jailbreak Status</span><b>${api.jb.done ? 'Jailbroken (Simulated)' : 'Not Jailbroken'}</b></div>
+          <div class="row"><span>Status</span><b><i class="dot"></i>Running</b></div>
+          <div class="row"><span>Version</span><b>1.0</b></div>
+        </div>
+        <div class="gh">Runtime</div><div class="group" id="rt"></div><div class="gf">Values are read live from this browser. This is a simulation: no jailbreak is present and no Procursus packages are installed.</div>
+        <div class="gh">Wallpaper</div>
+        <div class="group">
+          <div class="row tall"><span>Current</span><div class="thumb" id="wthumb"></div></div>
+          <label class="row btn" for="wfile"><span>Choose Photo</span><span class="chev">›</span></label>
+          <div class="row btn red" id="wreset"><span>Reset to Default</span></div>
+        </div>
+        <div class="gf">Pick an image from your device. It stays on this device and is used on the Home Screen and App Library.</div>
+        <input id="wfile" type="file" accept="image/*" hidden>`;
+      const th = el.querySelector('#wthumb'), rs = el.querySelector('#wreset');
+      const sa = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+      el.querySelector('#rt').innerHTML = [['Sandbox', 'Web View'], ['Viewport', `${innerWidth} × ${innerHeight}`], ['Pixel Ratio', `${devicePixelRatio}x`], ['Appearance', matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light'], ['Display Mode', sa ? 'Full Screen' : 'Browser'], ['Registered Apps', String(APPS.length)]].map(r => `<div class="row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+      const sync = () => { th.style.backgroundImage = `url(${api.wallpaperURL()})`; rs.style.display = api.hasCustomWallpaper() ? '' : 'none'; };
+      el.querySelector('#wfile').addEventListener('change', async e => {
+        const f = e.target.files[0]; if (f) { await api.setWallpaper(f); sync(); } e.target.value = '';
+      });
+      rs.addEventListener('click', () => { api.resetWallpaper(); sync(); });
+      sync();
+      return el;
+    }
+  },
+  {
+    id: 'app.plikzach',
+    name: 'plikzach',
+    category: 'System',
+    icon: {
+      bg: 'linear-gradient(160deg,#5ac8fa 0%,#1a73e8 55%,#0b2f8a 100%)',
+      svg: '<svg viewBox="0 0 60 60"><path d="M21 29v-7a9 9 0 0 1 17-4" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/><rect x="15" y="28" width="30" height="22" rx="6.5" fill="#fff"/><circle cx="30" cy="37.5" r="3.3" fill="#1a73e8"/><rect x="28.6" y="38" width="2.8" height="6.5" rx="1.4" fill="#1a73e8"/></svg>'
+    },
+    content(api) {
+      const el = document.createElement('div'); el.className = 'jbv';
+      const S = ['Preparing sandbox', 'Patching virtual kernel', 'Mounting simulated rootfs', 'Bootstrapping packages', 'Installing Sileo', 'Installing NewTerm', 'Rebuilding icon cache'];
+      el.innerHTML = `<div class='hero'><div class='ic' id='jic' style='background:${this.icon.bg}'>${this.icon.svg}</div><h1>plikzach</h1><p>Jailbreak for iOS Jailed Environment</p></div>
+        <div class='group'><div class='row'><span>Status</span><b id='jst'></b></div><div class='row'><span>Packages</span><b id='jpk'></b></div></div>
+        <div><div class='gh'>Progress</div><div class='group'><div class='bar'><i id='jbar'></i></div>${S.map(x => `<div class='row stp pend'><span>${x}</span><u></u></div>`).join('')}</div></div>
+        <div class='jbtnw' id='jw'><button class='jbtn' id='jgo'>Jailbreak</button></div>
+        <div class='gf'>Simulation only. plikzach changes nothing on your real device. It installs Sileo and NewTerm into this web environment.</div>`;
+      const $$ = x => el.querySelector(x), rows = [...el.querySelectorAll('.stp')], bar = $$('#jbar'), jw = $$('#jw');
+      const status = () => { const d = api.jb.done; $$('#jst').textContent = d ? 'Jailbroken (Simulated)' : 'Not Jailbroken'; $$('#jpk').textContent = d ? 'Sileo, NewTerm' : 'None'; };
+      const finish = () => { jw.innerHTML = `<div class='jdone'><svg viewBox='0 0 52 52'><circle cx='26' cy='26' r='25' fill='#34c759'/><path class='tick' d='M14 27l8 8 16-17' fill='none' stroke='#fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/></svg><b>Jailbroken</b><small>Sileo and NewTerm are on your Home Screen.</small></div>`; status(); };
+      if (api.jb.done) { rows.forEach(r => r.className = 'row stp ok'); bar.style.width = '100%'; finish(); }
+      else {
+        status();
+        $$('#jgo').onclick = async e => {
+          const go = e.currentTarget; go.disabled = true; go.textContent = 'Jailbreaking...'; $$('#jic').classList.add('run');
+          for (let i = 0; i < rows.length; i++) {
+            rows[i].className = 'row stp run'; bar.style.width = ((i + .5) / rows.length * 100) + '%';
+            await new Promise(r => setTimeout(r, 700 + Math.random() * 500)); rows[i].className = 'row stp ok';
+          }
+          bar.style.width = '100%'; $$('#jic').classList.remove('run'); api.runJailbreak(); finish();
+        };
+      }
+      const info = this.deviceInfo(); info.querySelector('.hero').remove(); el.append(info);
+      [...el.children].forEach((c, i) => c.style.setProperty('--n', i));
+      return el;
+    },
+    deviceInfo() {
+      const ua = navigator.userAgent, m = ua.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))?/), sf = ua.match(/Version\/([\d.]+)/);
+      const dev = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : 'Unknown';
+      const g = [
+        ['Device', [['Type', dev], ['Platform', navigator.platform || 'Unknown'], ['CPU Threads', navigator.hardwareConcurrency || 'Unknown'], ['Touch Points', navigator.maxTouchPoints || 0]]],
+        ['Software', [['Reported iOS', m ? `${m[1]}.${m[2]}${m[3] ? '.' + m[3] : ''}` : 'Unknown'], ['Browser Engine', 'WebKit'], ['Safari Version', sf ? sf[1] : 'Unknown']]],
+        ['Display', [['Screen', `${screen.width} \u00d7 ${screen.height}`], ['Viewport', `${innerWidth} \u00d7 ${innerHeight}`], ['Pixel Ratio', `${devicePixelRatio}x`], ['Color Depth', `${screen.colorDepth}-bit`], ['Orientation', innerHeight >= innerWidth ? 'Portrait' : 'Landscape']]],
+        ['Locale', [['Language', navigator.language], ['Time Zone', Intl.DateTimeFormat().resolvedOptions().timeZone]]]
+      ];
+      const el = document.createElement('div');
+      el.innerHTML = `<div class="hero"><div class="ic" style="background:${this.icon.bg}">${this.icon.svg}</div><h1>plikzach</h1><p>iOS Phone Info</p></div>`
+        + g.map(([h, rows]) => `<div class="gh">${h}</div><div class="group">${rows.map(r => `<div class="row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`).join('')
+        + `<div class="gf">Read live from Safari. The browser may report a generalized iOS version or hide some hardware details.</div><div class="gh">User Agent</div><div class="group"><div class="row" style="padding:12px 16px"><code style="font:12px ui-monospace,Menlo,monospace;color:var(--sec);word-break:break-all;-webkit-user-select:text;user-select:text"></code></div></div>`;
+      el.querySelector('code').textContent = ua;
+      return el;
+    }
+  }
+];
+
+/* Installable apps: added to APPS by the simulated jailbreak (plikzach). */
+const CATALOG = [
+  {
+    id: 'app.sileo', name: 'Sileo', category: 'System',
+    icon: { bg: 'linear-gradient(160deg,#9a8bff,#4a3bd0 58%,#1d1670)', svg: `<svg viewBox="0 0 60 60"><path d="M30 11 46 20 30 29 14 20z" fill="#fff"/><path d="M14 20 30 29v20L14 40z" fill="#fff" fill-opacity=".72"/><path d="M46 20 30 29v20l16-9z" fill="#fff" fill-opacity=".45"/></svg>` },
+    content(api) {
+      const el = document.createElement('div'); el.className = 'sl';
+      const SEC = { bash: 'Shells', coreutils: 'System', apt: 'Package Managers', dpkg: 'Package Managers', sileo: 'Package Managers', newterm: 'Terminal Support', curl: 'Networking', wget: 'Networking', openssh: 'Networking', nano: 'Text Editors', vim: 'Text Editors', git: 'Development', python3: 'Development', neofetch: 'Utilities', htop: 'Utilities' };
+      const TABS = [['home', 'Home', '<path d="M3 11 12 4l9 7M5 10v10h14V10"/>'], ['sources', 'Sources', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'], ['changes', 'Changes', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'], ['packages', 'Packages', '<path d="M12 3 20 7.5v9L12 21 4 16.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/>'], ['search', 'Search', '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M16 16l5 5"/>']];
+      const names = Object.keys(PKG_DB).sort(), has = n => api.jb.inst.includes(n);
+      const meta = n => ({ v: PKG_DB[n][0], s: SEC[n] || 'Utilities', z: (n.length * 173 % 900 + 120) + ' KB' });
+      let tab = 'home', det = null, q = {}, cons = false, sv = '';
+      const pi = (n, c = '') => { const h = (n.charCodeAt(0) * 47 + n.length * 13) % 360; return `<i class='pi ${c}' style='background:linear-gradient(160deg,hsl(${h} 70% 62%),hsl(${h} 65% 42%))'>${n[0].toUpperCase()}</i>`; };
+      const row = n => `<div class='row pk' data-p='${n}'>${pi(n)}<div><span>${n}</span><small>${PKG_DB[n][1]}</small></div><span class='chev'>›</span></div>`;
+      const list = a => `<div class='group'>${a.map(row).join('')}</div>`;
+      const views = {
+        home: () => `<h2 class='lt'>Home</h2><div class='ban'><div style='background:linear-gradient(135deg,#8a7bff,#3b2fb8)'><b>Welcome to Sileo</b><small>Simulated package manager</small></div><div style='background:linear-gradient(135deg,#ff9f6b,#d6366b)'><b>Custom XH</b><small>Curated simulated packages</small></div></div><div class='gh'>Featured Packages</div>${list(['neofetch', 'htop', 'git', 'nano', 'python3'])}<div class='gh'>Device</div><div class='group'><div class='row'><span>System</span><b>iOS Jailed Environment 1.0</b></div><div class='row'><span>Installed</span><b>${api.jb.inst.length} packages</b></div></div>`,
+        sources: () => `<h2 class='lt'>Sources</h2><div class='group'>${[['Procursus Inspired', 'simulated://procursus', BASE_PKGS.length, '#6a5cf0'], ['Custom XH', 'simulated://custom-xh', names.length - BASE_PKGS.length, '#d6366b']].map(r => `<div class='row pk'>${'<i class="pi" style="background:' + r[3] + '">' + r[0][0] + '</i>'}<div><span>${r[0]}</span><small>${r[1]}</small></div><small>${r[2]} packages</small></div>`).join('')}</div><div class='gf'>Sources are simulated. Nothing is downloaded.</div>`,
+        changes: () => `<h2 class='lt'>Changes</h2><div class='gh'>Upgrades</div><div class='group'><div class='row'><span>All packages are up to date</span></div></div><div class='gh'>Recently Updated</div>${list(names)}`,
+        packages: () => { const inst = names.filter(has), secs = [...new Set(inst.map(n => meta(n).s))].sort(); return `<h2 class='lt'>Packages</h2>` + secs.map(x => `<div class='gh'>${x}</div>${list(inst.filter(n => meta(n).s === x))}`).join(''); },
+        search: () => `<h2 class='lt'>Search</h2><div class='sq'><input id='sq' type='search' placeholder='Packages' autocapitalize='off' autocorrect='off' spellcheck='false'></div><div id='sr'></div>`
+      };
+      const detail = n => {
+        const m = meta(n), st = q[n] ? 'q' : has(n) ? (BASE_PKGS.includes(n) ? 'b' : 'r') : 'g';
+        const b = { q: `<span class='gbtn' data-a='dq'>Queued</span>`, b: `<span class='gbtn dis'>Installed</span>`, r: `<span class='gbtn rm' data-a='rm'>Remove</span>`, g: `<span class='gbtn' data-a='get'>Get</span>` }[st];
+        return `<div class='back' data-a='back'>‹ Back</div><div class='dh'>${pi(n, 'big')}<div><h3>${n}</h3><small>${m.s}</small></div>${b}</div><div class='gh'>Description</div><div class='group'><div class='row' style='padding:12px 16px'>${PKG_DB[n][1]}. Provided by the simulated Custom XH repository.</div></div><div class='gh'>Details</div><div class='group'>${[['Version', m.v], ['Section', m.s], ['Size', m.z], ['Developer', 'Custom XH'], ['Identifier', 'xh.' + n]].map(r => `<div class='row'><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`;
+      };
+      const wireSearch = () => {
+        const i = el.querySelector('#sq'), r = el.querySelector('#sr'); i.value = sv;
+        const f = () => { sv = i.value; const L = names.filter(n => (n + ' ' + PKG_DB[n][1]).toLowerCase().includes(sv.toLowerCase())); r.innerHTML = L.length ? list(L) : `<div class='gf' style='text-align:center'>No results</div>`; };
+        i.addEventListener('input', f); f();
+      };
+      const draw = () => {
+        const nq = Object.keys(q).length;
+        el.innerHTML = `<div class='sv'>${det ? detail(det) : views[tab]()}</div>`
+          + (nq ? `<div class='qbar'><span>${nq} package${nq > 1 ? 's' : ''} queued</span><span class='gbtn' data-a='conf'>Confirm</span></div>` : '')
+          + `<div class='tabbar'>${TABS.map(t => `<div class='${t[0] === tab && !det ? 'on' : ''}' data-t='${t[0]}'><svg viewBox='0 0 24 24'>${t[2]}</svg>${t[1]}</div>`).join('')}</div>`
+          + (cons ? `<div class='cons'><pre id='cpre'></pre><div id='cbtn'></div></div>` : '');
+        if (tab === 'search' && !det) wireSearch();
+      };
+      const confirm = async () => {
+        cons = true; draw(); const pre = el.querySelector('#cpre'), ops = Object.entries(q); q = {};
+        const w = (t, ms = 260) => new Promise(r => { pre.textContent += t + '\n'; pre.scrollTop = pre.scrollHeight; setTimeout(r, ms); });
+        await w('Reading package lists... Done');
+        for (const [n, a] of ops) {
+          if (a === 'install') { await w(`Selecting previously unselected package ${n}.`); await w(`Unpacking ${n} (${PKG_DB[n][0]}) ...`, 420); await w(`Setting up ${n} (${PKG_DB[n][0]}) ...`, 380); if (!has(n)) api.jb.inst.push(n); }
+          else { await w(`Removing ${n} (${PKG_DB[n][0]}) ...`, 420); api.jb.inst = api.jb.inst.filter(x => x !== n); }
+          api.saveJB();
+        }
+        await w('Done.'); const b = el.querySelector('#cbtn'); if (b) b.innerHTML = `<span class='gbtn' data-a='done'>Return to Sileo</span>`;
+      };
+      el.addEventListener('click', e => {
+        const t = e.target.closest('[data-t],[data-p],[data-a]'); if (!t) return; const d = t.dataset;
+        if (d.t) { tab = d.t; det = null; draw(); ascroll.scrollTop = 0; }
+        else if (d.p) { det = d.p; draw(); ascroll.scrollTop = 0; }
+        else if (d.a === 'back') { det = null; draw(); }
+        else if (d.a === 'conf') confirm();
+        else { if (d.a === 'get') q[det] = 'install'; else if (d.a === 'rm') q[det] = 'remove'; else if (d.a === 'dq') delete q[det]; else if (d.a === 'done') cons = false; draw(); }
+      });
+      draw(); return el;
+    }
+  },
+  {
+    id: 'app.newterm', name: 'NewTerm', category: 'System', dark: true,
+    icon: { bg: 'linear-gradient(160deg,#3a3c44,#0b0c0f)', svg: `<svg viewBox="0 0 60 60"><rect x="10" y="14" width="40" height="32" rx="6" fill="#000" fill-opacity=".55" stroke="#fff" stroke-opacity=".5" stroke-width="1.6"/><path d="M18 24l8 6-8 6" fill="none" stroke="#5ef08a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 37h12" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg>` },
+    content(api) {
+      const el = document.createElement('div'); el.className = 'term';
+      let cwd = '/var/mobile', hist = [], hp = 0, line, inp;
+      const FS = { '/': ['Applications', 'bin', 'etc', 'usr', 'var'], '/etc': ['hostname', 'os-release'], '/var': ['mobile'], '/var/mobile': ['Documents', 'Library'], '/var/mobile/Documents': ['notes.txt'], '/usr': ['bin', 'lib'], '/bin': ['bash', 'cat', 'ls'], '/Applications': APPS.map(a => a.name) };
+      const FILES = { '/etc/hostname': 'iphone', '/etc/os-release': 'NAME="iOS Jailed Environment"\nVERSION="1.0"\nPRETTY_NAME="iOS 27 Inspired (simulated)"', '/var/mobile/Documents/notes.txt': 'Simulated shell. Nothing here touches your real device.' };
+      const PKG_CMD = { neofetch: 'neofetch', curl: 'curl', wget: 'wget', nano: 'nano', vim: 'vim', git: 'git', htop: 'htop', python3: 'python3', ssh: 'openssh' };
+      const has = n => api.jb.inst.includes(n);
+      const res = p => { if (!p || p === '~') return '/var/mobile'; const o = []; (p[0] === '/' ? p : cwd + '/' + p).split('/').forEach(s => { if (s && s !== '.') s === '..' ? o.pop() : o.push(s); }); return '/' + o.join('/'); };
+      const out = (t, c) => { if (t === '' || t == null) return; const d = document.createElement('div'); if (c) d.className = c; d.textContent = t; el.append(d); };
+      const apt = a => {
+        const [c, ...r] = a;
+        if (c === 'update') return 'Hit:1 simulated://procursus ./\nReading package lists... Done';
+        if (c === 'list') return [...api.jb.inst].sort().map(n => `${n}/now ${PKG_DB[n][0]} arm64 [installed]`).join('\n');
+        if (c === 'search') return Object.keys(PKG_DB).filter(n => !r[0] || n.includes(r[0])).map(n => `${n} - ${PKG_DB[n][1]}`).join('\n');
+        if (c === 'install' || c === 'remove') {
+          if (!r.length) return 'E: No packages specified';
+          return r.map(n => {
+            if (!PKG_DB[n]) return `E: Unable to locate package ${n}`;
+            if (c === 'install') { if (has(n)) return `${n} is already the newest version (${PKG_DB[n][0]}).`; api.jb.inst.push(n); api.saveJB(); return `Reading package lists... Done\nSetting up ${n} (${PKG_DB[n][0]}) ...`; }
+            if (BASE_PKGS.includes(n)) return `E: ${n} is required and cannot be removed`;
+            if (!has(n)) return `Package '${n}' is not installed, so not removed`;
+            api.jb.inst = api.jb.inst.filter(x => x !== n); api.saveJB(); return `Removing ${n} (${PKG_DB[n][0]}) ...`;
+          }).join('\n');
+        }
+        return 'Usage: apt [update|list|search|install|remove] [package]';
+      };
+      const C = {
+        help: () => 'help ls cd pwd cat echo whoami id hostname uname date uptime ps clear apt dpkg sudo exit\nInstalled packages add their own commands.',
+        ls: a => { const p = res(a[0] || '.'); return FS[p] ? FS[p].join('  ') : FILES[p] ? p.split('/').pop() : `ls: cannot access '${a[0]}': No such file or directory`; },
+        cd: a => { const p = res(a[0]); if (FS[p]) { cwd = p; return ''; } return `bash: cd: ${a[0]}: No such file or directory`; },
+        pwd: () => cwd, cat: a => FILES[res(a[0])] ?? `cat: ${a[0] || ''}: No such file or directory`,
+        echo: a => a.join(' '), whoami: () => 'mobile', id: () => 'uid=501(mobile) gid=501(mobile)', hostname: () => 'iphone',
+        uname: a => a[0] === '-a' ? 'Darwin iphone 27.0.0 ios-jailed arm64 (simulated)' : 'Darwin',
+        date: () => new Date().toString(), uptime: () => `up ${Math.max(1, Math.round(performance.now() / 60000))} min`,
+        ps: () => '  PID TTY      CMD\n    1 ??       launchd\n  312 ttys000  bash',
+        apt, 'apt-get': apt,
+        dpkg: a => a[0] === '-l' ? [...api.jb.inst].sort().map(n => `ii  ${n.padEnd(12)}${PKG_DB[n][0].padEnd(10)}${PKG_DB[n][1]}`).join('\n') : 'Usage: dpkg -l',
+        clear: () => { el.textContent = ''; return ''; }, exit: () => { api.close(); return ''; },
+        neofetch: () => `mobile@iphone\n-------------\nOS: iOS Jailed Environment (simulated)\nKernel: Darwin 27.0.0\nShell: bash ${PKG_DB.bash[0]}\nResolution: ${screen.width}x${screen.height}\nPackages: ${api.jb.inst.length} (dpkg)`
+      };
+      const run = s => {
+        const m = s.trim().split(/\s+/); if (!m[0]) return; if (m[0] === 'sudo' && m.length > 1) m.shift();
+        const c = m.shift();
+        if (PKG_CMD[c]) return out(!has(PKG_CMD[c]) ? `bash: ${c}: command not found` : c === 'neofetch' ? C.neofetch() : `${c} ${PKG_DB[PKG_CMD[c]][0]} (simulated, no network access)`);
+        if (C[c]) return out(C[c](m));
+        out(`bash: ${c}: command not found`);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          const v = inp.value; if (v.trim()) hist.push(v); hp = hist.length;
+          inp.replaceWith(Object.assign(document.createElement('span'), { textContent: v }));
+          run(v); newLine(); ascroll.scrollTop = ascroll.scrollHeight; inp.focus();
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          hp = clamp(hp + (e.key === 'ArrowUp' ? -1 : 1), 0, hist.length); inp.value = hist[hp] || ''; e.preventDefault();
+        }
+      };
+      const newLine = () => {
+        line = document.createElement('div'); line.className = 'tl';
+        line.innerHTML = `<span class='p'></span><input autocapitalize='off' autocorrect='off' spellcheck='false' autocomplete='off' enterkeyhint='go'>`;
+        line.firstChild.textContent = `mobile@iphone:${cwd === '/var/mobile' ? '~' : cwd}$`;
+        inp = line.lastChild; inp.addEventListener('keydown', onKey); el.append(line);
+      };
+      out('NewTerm 2.1 (simulated shell)\nType help for commands. Nothing here touches your real device.', 'd'); newLine();
+      el.addEventListener('click', () => { if (!String(getSelection())) inp.focus(); });
+      return el;
+    }
+  }
+];
+const PKG_DB = { bash: ['5.2.21', 'GNU Bourne Again Shell'], coreutils: ['9.4', 'Basic file and text utilities'], apt: ['2.7.6', 'Advanced package manager'], dpkg: ['1.22.4', 'Debian package manager'], sileo: ['2.5', 'Package manager'], newterm: ['2.1', 'Terminal emulator'], curl: ['8.5.0', 'Transfer data with URLs'], wget: ['1.21.4', 'Network file retriever'], nano: ['7.2', 'Small text editor'], vim: ['9.1', 'Vi improved editor'], git: ['2.43.0', 'Distributed version control'], neofetch: ['7.1.0', 'System information tool'], htop: ['3.3.0', 'Interactive process viewer'], python3: ['3.12.1', 'Python interpreter'], openssh: ['9.6', 'Secure shell client'] };
+const BASE_PKGS = ['bash', 'coreutils', 'apt', 'dpkg', 'sileo', 'newterm'];
+
+/* ============ HELPERS ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const byId = id => APPS.find(a => a.id === id);
+const wall = $('#wall'), home = $('#home'), pager = $('#pager'), track = $('#track'),
+      dock = $('#dock'), dots = $('#dots'), view = $('#appview'), appc = $('#appc'),
+      ascroll = $('#ascroll'), nav = $('.nav'), hi = $('#hi'), splash = $('#splash');
+
+function iconNode(app) {
+  const d = document.createElement('div');
+  d.className = 'ic'; d.style.background = app.icon.bg; d.innerHTML = app.icon.svg; return d;
+}
+function appNode(app, label = true) {
+  const a = document.createElement('div'); a.className = 'app'; a.dataset.id = app.id;
+  a.append(iconNode(app));
+  if (label) { const s = document.createElement('span'); s.textContent = app.name; a.append(s); }
+  return a;
+}
+
+/* ============ SIMULATED JAILBREAK STATE ============ */
+const JB = (() => { try { return Object.assign({ done: false, inst: [] }, JSON.parse(localStorage.getItem('ije.jb') || '{}')); } catch (e) { return { done: false, inst: [] }; } })();
+function saveJB() { try { localStorage.setItem('ije.jb', JSON.stringify(JB)); } catch (e) {} }
+function syncCatalog() { if (!JB.done) return false; let ch = false; CATALOG.forEach(a => { if (!byId(a.id)) { APPS.push(a); ch = true; } }); return ch; }
+function runJailbreak() { JB.done = true; JB.inst = [...new Set([...JB.inst, ...BASE_PKGS])]; saveJB(); if (syncCatalog()) build(); }
+
+/* ============ WALLPAPER ============ */
+const WKEY = 'ije.wallpaper';
+let defaultWall = '', customWall = null;
+function makeDefaultWall() {
+  const W = 393, H = 852, k = 2;
+  const c = document.createElement('canvas'); c.width = W * k; c.height = H * k;
+  const x = c.getContext('2d'); x.scale(k, k);
+  x.fillStyle = '#7e7e84'; x.fillRect(0, 0, W, H);
+  const u = W / 4.4, pw = u * .56, ph = u * .36, depth = u * .1;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const pal = [['#c85a58', '#9c3f3f'], ['#8d6bc9', '#6444a0'], ['#4f78c6', '#35539a'], ['#e3d46a', '#b3a444'], ['#b9764a', '#8a5330'], ['#5c7564', '#3e5446']];
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  for (let s = -30; s < 40; s++) for (let i = -30; i < 40; i++) {
+    const j = s - i, cx = W * .5 + (i - j) * pw * .5 + 0, cy = H * .3 + (i + j) * ph * .5 - 30;
+    if (cx < -u || cx > W + u || cy < -u || cy > H + u) continue;
+    const accent = (cx > W * .42 && cy > H * .38 && rnd() < .3) ? pal[Math.floor(rnd() * pal.length)] : null;
+    const top = accent ? accent[0] : '#c8c8cc', side = accent ? accent[1] : '#8f8f95';
+    const lift = accent ? depth * 1.3 : 0, r = 9;
+    const quad = (dy, col) => {
+      x.beginPath();
+      x.moveTo(cx, cy - ph * .46 + dy); x.lineTo(cx + pw * .46, cy + dy); x.lineTo(cx, cy + ph * .46 + dy); x.lineTo(cx - pw * .46, cy + dy); x.closePath();
+      x.fillStyle = col; x.strokeStyle = col; x.lineWidth = r; x.fill(); x.stroke();
+    };
+    x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 14; x.shadowOffsetY = 6;
+    quad(depth, side); x.shadowColor = 'transparent';
+    quad(-lift, side); 
+    const g = x.createLinearGradient(cx, cy - ph, cx, cy + ph);
+    g.addColorStop(0, accent ? top : '#dcdce0'); g.addColorStop(1, accent ? top : '#b6b6bb');
+    quad(-lift - 1, g);
+  }
+  const v = x.createRadialGradient(W * .5, H * .5, H * .15, W * .5, H * .5, H * .75);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.38)');
+  x.fillStyle = v; x.fillRect(0, 0, W, H);
+  return c.toDataURL('image/jpeg', .9);
+}
+function applyWall() { wall.style.backgroundImage = `url(${customWall || defaultWall})`; }
+const api = {
+  wallpaperURL: () => customWall || defaultWall,
+  hasCustomWallpaper: () => !!customWall,
+  async setWallpaper(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image(); img.src = url; await img.decode().catch(() => {});
+    const m = 1600, sc = Math.min(1, m / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    customWall = c.toDataURL('image/jpeg', .85);
+    try { localStorage.setItem(WKEY, customWall); } catch (e) {}
+    applyWall();
+  },
+  resetWallpaper() { customWall = null; try { localStorage.removeItem(WKEY); } catch (e) {} applyWall(); },
+  close: () => closeApp(), jb: JB, saveJB, runJailbreak
+};
+
+/* ============ HOME SCREEN + LIBRARY ============ */
+let idx = 0, N = 1, homePages = 1;
+function build() {
+  track.innerHTML = ''; dock.innerHTML = ''; dots.innerHTML = '';
+  const docked = APPS.filter(a => a.dock).slice(0, 4);
+  docked.forEach(a => dock.append(appNode(a, false)));
+  const rest = APPS.filter(a => !a.dock), per = 24;
+  homePages = Math.max(1, Math.ceil(rest.length / per));
+  for (let p = 0; p < homePages; p++) {
+    const page = document.createElement('div'); page.className = 'page';
+    const g = document.createElement('div'); g.className = 'grid';
+    rest.slice(p * per, p * per + per).forEach(a => g.append(appNode(a)));
+    page.append(g); track.append(page);
+  }
+  track.append(buildLibrary());
+  N = homePages + 1;
+  for (let i = 0; i < N; i++) dots.append(document.createElement('i'));
+  idx = clamp(idx, 0, N - 1); setPos(0, false);
+}
+function mini(app) { const i = iconNode(app); i.dataset.id = app.id; return i; }
+function tile(name, list) {
+  const t = document.createElement('div'); t.className = 'tile';
+  const b = document.createElement('div'); b.className = 'tbox glass';
+  list.slice(0, list.length > 4 ? 3 : 4).forEach(a => b.append(mini(a)));
+  if (list.length > 4) {
+    const c = document.createElement('div'); c.className = 'cluster';
+    list.slice(3, 7).forEach(a => c.append(iconNode(a))); b.append(c);
+  }
+  const l = document.createElement('b'); l.textContent = name; t.append(b, l); return t;
+}
+function buildLibrary() {
+  const page = document.createElement('div'); page.className = 'page lib'; page.id = 'lib';
+  page.innerHTML = `<div class="search"><div class="sbox glass"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l5 5"/></svg><input id="q" type="search" placeholder="App Library" autocomplete="off" autocapitalize="off" enterkeyhint="search"></div><span class="cancel" id="qc">Cancel</span></div><div class="cats"></div><div class="results glass"></div>`;
+  const cats = $('.cats', page);
+  if (APPS.length) {
+    cats.append(tile('Custom XH', APPS));
+    
+    
+  }
+  const q = $('#q', page), res = $('.results', page);
+  const renderRes = () => {
+    const t = q.value.trim().toLowerCase();
+    const list = APPS.filter(a => a.name.toLowerCase().includes(t)).sort((a, b) => a.name.localeCompare(b.name));
+    res.innerHTML = '';
+    if (!list.length) { res.innerHTML = '<div class="empty">No Results</div>'; return; }
+    list.forEach(a => { const r = document.createElement('div'); r.className = 'rrow'; r.dataset.id = a.id; r.append(iconNode(a)); const s = document.createElement('span'); s.textContent = a.name; r.append(s); res.append(r); });
+  };
+  q.addEventListener('focus', () => { page.classList.add('searching'); renderRes(); });
+  q.addEventListener('input', renderRes);
+  $('#qc', page).addEventListener('click', () => { q.value = ''; q.blur(); page.classList.remove('searching'); page.scrollTop = 0; });
+  return page;
+}
+
+/* ============ PAGER ============ */
+function setPos(dx, anim) {
+  const W = pager.clientWidth, x = -idx * W + dx, f = -x / W, p = clamp(f - (N - 2), 0, 1);
+  const tr = anim ? '.45s cubic-bezier(.2,.9,.25,1)' : 'none';
+  track.style.transition = anim ? 'transform ' + tr : 'none';
+  track.style.transform = `translate3d(${x}px,0,0)`;
+  wall.style.transition = anim ? 'filter ' + tr + ',transform ' + tr : 'none';
+  wall.style.filter = `blur(${p * 26}px) brightness(${1 - p * .32}) saturate(${1 + p * .15})`;
+  wall.style.transform = `scale(${1 + p * .04}) translateX(${-f * 6}px)`;
+  [dock, dots].forEach(e => { e.style.transition = anim ? 'opacity .35s, transform .45s cubic-bezier(.2,.9,.25,1)' : 'none'; e.style.opacity = 1 - p; e.style.transform = `translateY(${p * 40}px)`; e.style.pointerEvents = p > .5 ? 'none' : ''; });
+  [...dots.children].forEach((d, i) => d.classList.toggle('on', i === Math.round(clamp(f, 0, N - 1))));
+}
+let sx = null, sy = 0, lock = null, moved = false, lx = 0, lt = 0, vel = 0;
+pager.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; lock = null; moved = false; lx = sx; lt = e.timeStamp; vel = 0; });
+pager.addEventListener('pointermove', e => {
+  if (sx == null) return;
+  let dx = e.clientX - sx; const dy = e.clientY - sy;
+  if (!lock) {
+    if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) lock = 'h';
+    else if (Math.abs(dy) > 8) { lock = 'v'; moved = true; sx = null; return; } else return;
+  }
+  moved = true;
+  const dt = e.timeStamp - lt; if (dt > 0) vel = .8 * vel + .2 * ((e.clientX - lx) / dt); lx = e.clientX; lt = e.timeStamp;
+  if ((idx === 0 && dx > 0) || (idx === N - 1 && dx < 0)) dx *= .32;
+  const q = $('#q'); if (q && document.activeElement === q) q.blur();
+  setPos(dx, false);
+});
+const endDrag = e => {
+  if (sx == null || lock !== 'h') { sx = null; return; }
+  const dx = e.clientX - sx, W = pager.clientWidth;
+  if (dx < -W * .22 || vel < -.45) idx = Math.min(N - 1, idx + 1);
+  else if (dx > W * .22 || vel > .45) idx = Math.max(0, idx - 1);
+  sx = null; setPos(0, true);
+};
+pager.addEventListener('pointerup', endDrag);
+pager.addEventListener('pointercancel', () => { sx = null; if (lock === 'h') setPos(0, true); });
+pager.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+function metrics() { document.documentElement.style.setProperty('--k', clamp(innerWidth / 393, .8, 1.3).toFixed(4)); }
+metrics(); addEventListener('resize', () => { metrics(); setPos(0, false); });
+
+/* ============ APP OPEN / CLOSE ============ */
+let current = null, srcEl = null, busy = false, closing = false, finT = 0, finFn = null;
+let srcRect = null; /* cached at open: the Home Screen is scaled while an app is open, so it cannot be re-measured on close */
+const iconRect = () => srcRect || { left: innerWidth / 2 - 30, top: innerHeight / 2 - 30, width: 60, height: 60 };
+/* Icon rect with the Home Screen's current zoom removed (it is mid-transition when re-opening during a close). */
+function settledRect(el) {
+  const r = el.getBoundingClientRect(), t = getComputedStyle(home).transform, s = t && t !== 'none' ? new DOMMatrix(t).a || 1 : 1;
+  const sc = $('#screen'), cx = sc.clientWidth / 2, cy = sc.clientHeight / 2;
+  return { left: cx + (r.left - cx) / s, top: cy + (r.top - cy) / s, width: r.width / s, height: r.height / s };
+}
+function collapsedTransform(r) {
+  const sc = $('#screen'), W = sc.clientWidth, H = sc.clientHeight, s = r.width / W;
+  return { t: `translate(${r.left + r.width / 2 - W / 2}px,${r.top + r.height / 2 - H / 2}px) scale(${s})`, clip: `inset(${Math.max(0, (H - W) / 2)}px 0px round ${W * .224}px)` };
+}
+function openApp(id, el) {
+  const app = byId(id); if (!app || (current && !closing)) return;
+  const reopen = closing; view.style.pointerEvents = hi.style.pointerEvents = '';
+  if (closing) { view.removeEventListener('transitionend', finFn); clearTimeout(finT); closing = false; }
+  busy = true; current = app; srcEl = el; srcRect = settledRect(el);
+  ascroll.innerHTML = ''; const c = app.content(api); ascroll.append(c instanceof Node ? c : Object.assign(document.createElement('div'), { innerHTML: c }));
+  ascroll.scrollTop = 0; nav.classList.remove('on'); $('#ntitle').textContent = app.name;
+  const k = collapsedTransform(iconRect());
+  splash.style.background = app.icon.bg; splash.innerHTML = app.icon.svg; if (!reopen) { splash.style.transition = 'none'; splash.style.opacity = 1; }
+  view.style.display = 'block'; if (!reopen) view.style.transition = 'none';
+  if (!reopen) { view.style.transform = k.t; view.style.clipPath = k.clip; } appc.classList.remove('on');
+  view.offsetWidth;
+  const T = '.36s cubic-bezier(.2,.85,.2,1)';
+  view.style.transition = `transform ${T}, clip-path ${T}`; splash.style.transition = 'opacity .2s ease .05s';
+  view.style.transform = 'none'; view.style.clipPath = 'inset(0px 0px round 0px)'; splash.style.opacity = 0;
+  appc.classList.add('on'); home.classList.add('away'); document.body.classList.add('inapp'); view.classList.toggle('dark', !!app.dark); document.body.classList.toggle('dk', !!app.dark);
+  
+}
+function closeApp() {
+  if (!current || closing) return; closing = true; view.style.pointerEvents = hi.style.pointerEvents = 'none';
+  const k = collapsedTransform(iconRect());
+  appc.classList.remove('on'); home.classList.remove('away'); document.body.classList.remove('inapp'); document.body.classList.remove('dk');
+  const T = '.34s cubic-bezier(.3,.8,.25,1)';
+  splash.style.transition = 'opacity .16s ease'; splash.style.opacity = 1;
+  view.style.transition = `transform ${T}, clip-path ${T}`;
+  view.style.transform = k.t; view.style.clipPath = k.clip;
+  const fin = finFn = e => {
+    if (e && e.target !== view) return;
+    view.removeEventListener('transitionend', fin); clearTimeout(finT);
+    view.style.display = 'none'; current = null; srcEl = null; srcRect = null; closing = false; busy = false;
+  };
+  view.addEventListener('transitionend', fin); finT = setTimeout(fin, 520);
+}
+ascroll.addEventListener('scroll', () => nav.classList.toggle('on', ascroll.scrollTop > 60), { passive: true });
+document.addEventListener('click', e => {
+  const t = e.target.closest('#home [data-id]'); if (!t) return;
+  openApp(t.dataset.id, t.querySelector('.ic') || t);
+});
+
+/* ============ HOME INDICATOR ============ */
+let hy = null, ht = 0, hv = 0, hp = 0;
+hi.addEventListener('pointerdown', e => { hy = e.clientY; ht = e.timeStamp; hv = 0; hp = 0; hi.classList.add('press'); hi.setPointerCapture(e.pointerId); });
+hi.addEventListener('pointermove', e => {
+  if (hy == null || !current) return;
+  const dy = Math.min(0, e.clientY - hy); if (dy < -4) view.style.transition = 'none'; hp = clamp(-dy / (innerHeight * .55), 0, 1);
+  const dt = e.timeStamp - ht; if (dt > 0) hv = (e.clientY - hy) / dt;
+  view.style.transform = `translateY(${dy * .6}px) scale(${1 - hp * .45})`; view.style.clipPath = `inset(0px 0px round ${hp * 44}px)`;
+  appc.style.opacity = 1 - hp * .5; home.classList.toggle('away', hp < .35);
+});
+const hiEnd = e => {
+  if (hy == null) return; const tap = Math.abs(e.clientY - hy) < 6; hy = null; hi.classList.remove('press');
+  if (!current) return;
+  appc.style.opacity = '';
+  if (tap && e.clientY < $('#screen').clientHeight - 38) { hi.style.pointerEvents = 'none'; const t = document.elementFromPoint(e.clientX, e.clientY); hi.style.pointerEvents = ''; if (t) t.click(); }
+  else if (tap || hp > .08 || hv < -.35) { closeApp(); }
+  else { view.style.transition = 'transform .4s cubic-bezier(.2,.9,.25,1), clip-path .4s'; view.style.transform = 'none'; view.style.clipPath = 'inset(0px 0px round 0px)'; home.classList.add('away'); }
+};
+hi.addEventListener('pointerup', hiEnd); hi.addEventListener('pointercancel', hiEnd);
+
+/* ============ BOOT ============ */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(g => document.addEventListener(g, e => e.preventDefault()));
+document.addEventListener('touchstart', () => {}, { passive: true });
+document.addEventListener('contextmenu', e => e.preventDefault());
+try { customWall = localStorage.getItem(WKEY) || null; } catch (e) {}
+defaultWall = makeDefaultWall(); applyWall(); syncCatalog(); build();
+</script>
+</body>
+</html>
