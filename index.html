@@ -27,14 +27,19 @@ html,body{margin:0;height:100%;overflow:hidden;position:fixed;inset:0;width:100%
 .app{width:var(--ic);display:flex;flex-direction:column;align-items:center;gap:calc(6px*var(--k));cursor:pointer;touch-action:pan-y}
 .app .ic{width:var(--ic)}
 .app span{color:#fff;font-size:12px;line-height:13px;height:13px;text-align:center;width:calc(var(--ic) + 16px*var(--k));text-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-.ic{aspect-ratio:1;border-radius:22.4%;position:relative;overflow:hidden;box-shadow:0 1px 1.5px rgba(0,0,0,.28),0 9px 18px -5px rgba(0,0,0,.45);transition:transform .22s var(--ease),filter .22s}
-.ic::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;padding:1.6px;background:linear-gradient(135deg,#fff,rgba(255,255,255,.28) 24%,rgba(255,255,255,0) 46%,rgba(255,255,255,0) 62%,rgba(255,255,255,.4) 86%,rgba(255,255,255,.85));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
-.ic svg{display:block;width:100%;height:100%;filter:drop-shadow(0 1.5px 2px rgba(0,0,0,.3))}
-.ic::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:radial-gradient(120% 70% at 22% -8%,rgba(255,255,255,.6),rgba(255,255,255,0) 58%),radial-gradient(90% 55% at 85% 108%,rgba(255,255,255,.3),rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 40%,rgba(0,0,0,.1));box-shadow:inset 2px 2px 3px -2px rgba(255,255,255,.9),inset -2px -2px 4px -2px rgba(255,255,255,.55),inset 0 0 16px rgba(255,255,255,.14),inset 0 -8px 12px -8px rgba(0,0,0,.3)}
+.ic{aspect-ratio:1;border-radius:22.4%;position:relative;overflow:hidden;isolation:isolate;box-shadow:0 1px 1.5px rgba(0,0,0,.22),0 5px 12px -5px rgba(0,0,0,.32);transition:transform .22s var(--ease),filter .22s}
+/* Liquid-glass icon finish: keep the app artwork crisp, with a fine refractive rim and soft moving-light reflections instead of a glowing gloss. */
+.ic::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;padding:1px;background:linear-gradient(150deg,rgba(255,255,255,.72),rgba(255,255,255,.16) 22%,rgba(255,255,255,0) 48%,rgba(255,255,255,.08) 72%,rgba(255,255,255,.42));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.ic svg{display:block;width:100%;height:100%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.ic::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:linear-gradient(155deg,rgba(255,255,255,.24) 0%,rgba(255,255,255,.08) 18%,transparent 38%),linear-gradient(325deg,rgba(255,255,255,.13),transparent 32%),linear-gradient(180deg,rgba(255,255,255,.055),transparent 48%,rgba(0,0,0,.075));box-shadow:inset 0 1px 1px rgba(255,255,255,.38),inset 0 -1px 1px rgba(0,0,0,.12)}
 [data-id]:active .ic,.ic[data-id]:active{transform:scale(.88);filter:brightness(.72)}
-.glass{position:relative;background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.1) 42%,rgba(255,255,255,.2));-webkit-backdrop-filter:blur(26px) saturate(210%) brightness(1.06);backdrop-filter:blur(26px) saturate(210%) brightness(1.06);box-shadow:inset 2px 2px 3px -2px rgba(255,255,255,.85),inset -2px -2px 4px -2px rgba(255,255,255,.5),inset 0 0 26px rgba(255,255,255,.1),inset 0 -14px 24px -16px rgba(255,255,255,.35),0 10px 30px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.12)}
-.glass::before,.tabbar::before,.qbar::before,.jbtn::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1.4px;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 55%,rgba(255,255,255,.18) 78%,rgba(255,255,255,.75));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.glass{position:relative;isolation:isolate;background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(255,255,255,.075) 38%,rgba(255,255,255,.16) 72%,rgba(255,255,255,.22));-webkit-backdrop-filter:blur(30px) saturate(185%) brightness(1.08);backdrop-filter:blur(30px) saturate(185%) brightness(1.08);box-shadow:inset 0 1px 1px rgba(255,255,255,.42),inset 0 -1px 1px rgba(255,255,255,.12),0 8px 26px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.1)}
+.glass::before,.tabbar::before,.qbar::before,.jbtn::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;padding:1px;background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(255,255,255,.12) 28%,rgba(255,255,255,.025) 54%,rgba(255,255,255,.16) 78%,rgba(255,255,255,.48));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.glass::after{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.2),transparent 27%,transparent 68%,rgba(255,255,255,.08));opacity:.8}
 #dock{position:absolute;left:var(--dock-mx);right:var(--dock-mx);bottom:var(--dock-b);height:var(--dock-h);border-radius:calc(35px*var(--k));display:flex;align-items:center;justify-content:center;gap:var(--gap);will-change:opacity,transform}
+#dock{background:linear-gradient(135deg,rgba(255,255,255,.105),rgba(255,255,255,.025) 42%,rgba(255,255,255,.075));-webkit-backdrop-filter:blur(42px) saturate(220%) brightness(1.12);backdrop-filter:blur(42px) saturate(220%) brightness(1.12);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 1px rgba(255,255,255,.26),inset 0 -1px 1px rgba(255,255,255,.055),0 12px 36px rgba(0,0,0,.14)}
+#dock::before{background:linear-gradient(125deg,rgba(255,255,255,.46),rgba(255,255,255,.055) 24%,rgba(255,255,255,.012) 55%,rgba(255,255,255,.14) 82%,rgba(255,255,255,.3))}
+#dock::after{background:radial-gradient(ellipse at 18% 0%,rgba(255,255,255,.15),transparent 45%),linear-gradient(115deg,rgba(255,255,255,.075),transparent 35%,transparent 72%,rgba(255,255,255,.035));opacity:.9}
 #dock .app span{display:none}
 #dots{position:absolute;left:0;right:0;bottom:calc(var(--dock-b) + var(--dock-h) + 14px*var(--k));display:flex;justify-content:center;gap:9px;pointer-events:none}
 #dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .25s,transform .25s}
@@ -90,6 +95,7 @@ body.inapp #hi i{background:var(--tx);box-shadow:none}
 body.inapp #hi{height:calc(max(var(--safe-b),34px*var(--k)) + 56px*var(--k))}
 
 .pk{padding:10px 16px;min-height:62px}.pk div{display:flex;flex-direction:column;gap:2px;min-width:0}.pk small{color:var(--sec);font-size:13px}.gbtn{background:rgba(0,122,255,.14);color:var(--blue);font-weight:600;font-size:14px;border-radius:16px;padding:5px 14px;min-width:72px;text-align:center;cursor:pointer;flex:none;box-shadow:inset 0 0 0 .5px rgba(0,122,255,.22),inset 1px 1px 1px -.5px rgba(255,255,255,.9)}.gbtn.rm{color:#ff3b30;background:rgba(255,59,48,.12)}.gbtn.dis{opacity:.5;pointer-events:none}
+.hexopt{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:58px}.hexopt input{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:18px;background:#8e8e93;position:relative;flex:none;outline:none;transition:background .2s}.hexopt input:checked{background:#34c759}.hexopt input::after{content:'';position:absolute;width:25px;height:25px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0004;transition:transform .2s}.hexopt input:checked::after{transform:translateX(19px)}.hexopt .hextext{display:flex;flex-direction:column;gap:3px;flex:1}.hexopt small{font-size:13px;color:var(--sec)}
 .bar{height:6px;border-radius:3px;background:var(--sep);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:3px;transition:width .5s var(--ease)}.jbtnw{padding:14px 16px 0}.jbtn{position:relative;width:100%;height:52px;border:0;border-radius:26px;background:linear-gradient(180deg,rgba(80,170,255,.98),rgba(0,104,235,.98));color:#fff;font:600 17px var(--font);cursor:pointer;box-shadow:inset 2px 2px 3px -2px rgba(255,255,255,.9),inset -2px -2px 4px -2px rgba(255,255,255,.5),inset 0 -10px 18px -10px rgba(0,60,170,.5),0 10px 24px -8px rgba(0,122,255,.6);transition:transform .15s,opacity .2s}.jbtn:active{transform:scale(.97)}.jbtn:disabled{opacity:.5}
 #appview.dark{--bg:#000;--cell:#1c1c1e;--tx:#fff;--sec:#8e8e93;--sep:rgba(84,84,88,.6);--nav:rgba(0,0,0,.7);--gl:rgba(44,44,48,.6);--lz:rgba(255,255,255,.14)}body.dk #hi i{background:#fff}
 /* Installed tweak previews: scroll-responsive motion and icon physics. */
@@ -99,6 +105,11 @@ body.inapp #hi{height:calc(max(var(--safe-b),34px*var(--k)) + 56px*var(--k))}
 #ascroll.fx-ios{scroll-behavior:smooth;scroll-snap-type:y proximity}
 .app.physics-active{z-index:30;position:relative;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3));will-change:transform}
 .app.physics-active .ic{transition:filter .12s;pointer-events:none}
+.zeptagon-hole{position:fixed;width:18px;height:18px;border-radius:50%;z-index:55;pointer-events:none;transform:translate(-50%,-50%) scale(.2);opacity:0;background:radial-gradient(circle at 50% 50%,#000 0 36%,#090612 48%,#25113e 61%,rgba(125,72,255,.62) 67%,rgba(90,45,180,.12) 76%,transparent 78%);box-shadow:0 0 12px 4px rgba(120,65,255,.42),0 0 34px 12px rgba(70,30,140,.28);will-change:transform,opacity;filter:saturate(1.25)}
+.zeptagon-hole::before{content:"";position:absolute;inset:-24%;border-radius:50%;border:2px solid rgba(190,160,255,.62);box-shadow:0 0 16px rgba(150,100,255,.65);animation:zeptagon-spin 1.6s linear infinite;transform:rotateX(68deg) scaleY(.55)}
+.zeptagon-hole::after{content:"";position:absolute;inset:-55%;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(175,130,255,.0),rgba(180,145,255,.55),transparent 58%,rgba(110,70,210,.35),transparent);filter:blur(5px);animation:zeptagon-spin 2.4s linear infinite reverse}
+@keyframes zeptagon-spin{to{rotate:360deg}}
+.zeptagon-absorbed{pointer-events:none!important;will-change:transform,opacity;z-index:40}
 .physics-hint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:60;padding:9px 14px;border-radius:20px;background:rgba(20,20,24,.72);color:#fff;font:500 13px var(--font);backdrop-filter:blur(18px);pointer-events:none;white-space:nowrap}
 
 .term{padding:2px 16px 0;font:13.5px/1.45 ui-monospace,"SF Mono",Menlo,monospace;color:#e6e6e6;min-height:100%;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}.term .p{color:#5ef08a;white-space:nowrap}.term .d{color:#8e8e93}.tl{display:flex;gap:7px}.term input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:16px ui-monospace,Menlo,monospace;padding:0}
@@ -187,7 +198,7 @@ const APPS = [
       sync();
       const settings = el.querySelector('#tweak-settings');
       const installed = api.jb.inst;
-      if (installed.includes('scrollanim') || installed.includes('motionicons')) {
+      if (installed.includes('scrollanim') || installed.includes('motionicons') || installed.includes('zeptagonreborn')) {
         let s = `<div class="gh">Installed Tweaks</div>`;
         if (installed.includes('scrollanim')) {
           s += `<div class="group">
@@ -204,6 +215,13 @@ const APPS = [
             <div class="row"><span>Sensor permission</span><b id="motion-permission">Not requested</b></div>
           </div><div class="gf">Enable this switch, then shake your phone once to release the Home Screen icons. Shake again to settle them back into their original positions. Motion access is requested by iOS when you enable it.</div>`;
         }
+        if (installed.includes('zeptagonreborn')) {
+          s += `<div class="group" style="margin-top:12px">
+            <div class="row"><span>ZeptagonReborn</span><b><i class="dot"></i> Installed</b></div>
+            <div class="row"><span>Black hole effect</span><button id="zeptagon-enable" class="gbtn">Enable</button></div>
+            <div class="row"><span>Gesture</span><b>Double-tap Home Screen</b></div>
+          </div><div class="gf">Enable the tweak, then double-tap an empty area of the Home Screen to summon a growing black hole. Double-tap again to restore every icon.</div>`;
+        }
         settings.innerHTML = s;
         const style = settings.querySelector('#scroll-style');
         if (style) { style.value = api.tweaks.scrollStyle || 'ios'; style.addEventListener('change', () => api.setScrollStyle(style.value)); }
@@ -217,6 +235,12 @@ const APPS = [
             refresh();
           });
           refresh();
+        }
+        const zbtn = settings.querySelector('#zeptagon-enable');
+        if (zbtn) {
+          const refreshZ = () => { zbtn.textContent = api.tweaks.zeptagonEnabled ? 'Enabled' : 'Enable'; zbtn.classList.toggle('rm', api.tweaks.zeptagonEnabled); };
+          zbtn.addEventListener('click', () => { api.setZeptagonEnabled(!api.tweaks.zeptagonEnabled); refreshZ(); });
+          refreshZ();
         }
       }
       return el;
@@ -235,12 +259,15 @@ const APPS = [
       const S = ['Preparing sandbox', 'Patching virtual kernel', 'Mounting simulated rootfs', 'Bootstrapping packages', 'Installing Sileo', 'Installing NewTerm', 'Rebuilding icon cache'];
       el.innerHTML = `<div class='hero'><div class='ic' id='jic' style='background:${this.icon.bg}'>${this.icon.svg}</div><h1>plikzach</h1><p>Jailbreak for iOS Jailed Environment</p></div>
         <div class='group'><div class='row'><span>Status</span><b id='jst'></b></div><div class='row'><span>Packages</span><b id='jpk'></b></div></div>
-        <div><div class='gh'>Progress</div><div class='group'><div class='bar'><i id='jbar'></i></div>${S.map(x => `<div class='row stp pend'><span>${x}</span><u></u></div>`).join('')}</div></div>
+        <div class='gh'>Optional components</div><div class='group'><label class='hexopt'><span class='hextext'><b style='font-weight:600'>Install Hexagon Store</b><small>App Store for jailbreak-compatible apps</small></span><input id='hexagon-choice' type='checkbox' aria-label='Install Hexagon Store'></label></div><div class='gf'>You can change this choice before running the simulated jailbreak.</div><div><div class='gh'>Progress</div><div class='group'><div class='bar'><i id='jbar'></i></div>${S.map(x => `<div class='row stp pend'><span>${x}</span><u></u></div>`).join('')}</div></div>
         <div class='jbtnw' id='jw'><button class='jbtn' id='jgo'>Jailbreak</button></div>
         <div class='gf'>Simulation only. plikzach changes nothing on your real device. It installs Sileo and NewTerm into this web environment.</div>`;
       const $$ = x => el.querySelector(x), rows = [...el.querySelectorAll('.stp')], bar = $$('#jbar'), jw = $$('#jw');
-      const status = () => { const d = api.jb.done; $$('#jst').textContent = d ? 'Jailbroken (Simulated)' : 'Not Jailbroken'; $$('#jpk').textContent = d ? 'Sileo, NewTerm' : 'None'; };
-      const finish = () => { jw.innerHTML = `<div class='jdone'><svg viewBox='0 0 52 52'><circle cx='26' cy='26' r='25' fill='#34c759'/><path class='tick' d='M14 27l8 8 16-17' fill='none' stroke='#fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/></svg><b>Jailbroken</b><small>Sileo and NewTerm are on your Home Screen.</small></div>`; status(); };
+      const status = () => { const d = api.jb.done; $$('#jst').textContent = d ? 'Jailbroken (Simulated)' : 'Not Jailbroken'; $$('#jpk').textContent = d ? (api.jb.inst.includes('hexagonstore') ? 'Sileo, NewTerm, Hexagon Store' : 'Sileo, NewTerm') : 'None'; };
+      const hexChoice = $$('#hexagon-choice');
+      try { hexChoice.checked = localStorage.getItem('ije.installHexagon') === '1' || api.jb.inst.includes('hexagonstore'); } catch (_) {}
+      hexChoice.addEventListener('change', () => { try { localStorage.setItem('ije.installHexagon', hexChoice.checked ? '1' : '0'); } catch (_) {} if (api.jb.done) { if (hexChoice.checked) installHexagonStore(); else removeHexagonStore(); status(); $$('#jpk').textContent = api.jb.inst.includes('hexagonstore') ? 'Sileo, NewTerm, Hexagon Store' : 'Sileo, NewTerm'; } });
+      const finish = () => { jw.innerHTML = `<div class='jdone'><svg viewBox='0 0 52 52'><circle cx='26' cy='26' r='25' fill='#34c759'/><path class='tick' d='M14 27l8 8 16-17' fill='none' stroke='#fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/></svg><b>Jailbroken</b><small>Sileo, NewTerm${api.jb.inst.includes('hexagonstore') ? ' and Hexagon Store' : ''} are on your Home Screen.</small></div>`; status(); };
       if (api.jb.done) { rows.forEach(r => r.className = 'row stp ok'); bar.style.width = '100%'; finish(); }
       else {
         status();
@@ -283,7 +310,7 @@ const CATALOG = [
     icon: { bg: 'linear-gradient(160deg,#9a8bff,#4a3bd0 58%,#1d1670)', svg: `<svg viewBox="0 0 60 60"><path d="M30 11 46 20 30 29 14 20z" fill="#fff"/><path d="M14 20 30 29v20L14 40z" fill="#fff" fill-opacity=".72"/><path d="M46 20 30 29v20l16-9z" fill="#fff" fill-opacity=".45"/></svg>` },
     content(api) {
       const el = document.createElement('div'); el.className = 'sl';
-      const SEC = { scrollanim: 'Tweaks', motionicons: 'Tweaks', bash: 'Shells', coreutils: 'System', apt: 'Package Managers', dpkg: 'Package Managers', sileo: 'Package Managers', newterm: 'Terminal Support', curl: 'Networking', wget: 'Networking', openssh: 'Networking', nano: 'Text Editors', vim: 'Text Editors', git: 'Development', python3: 'Development', neofetch: 'Utilities', htop: 'Utilities' };
+      const SEC = { scrollanim: 'Tweaks', motionicons: 'Tweaks', zeptagonreborn: 'Tweaks', bash: 'Shells', coreutils: 'System', apt: 'Package Managers', dpkg: 'Package Managers', sileo: 'Package Managers', newterm: 'Terminal Support', curl: 'Networking', wget: 'Networking', openssh: 'Networking', nano: 'Text Editors', vim: 'Text Editors', git: 'Development', python3: 'Development', neofetch: 'Utilities', htop: 'Utilities' };
       const TABS = [['home', 'Home', '<path d="M3 11 12 4l9 7M5 10v10h14V10"/>'], ['sources', 'Sources', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'], ['changes', 'Changes', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'], ['packages', 'Packages', '<path d="M12 3 20 7.5v9L12 21 4 16.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/>'], ['search', 'Search', '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M16 16l5 5"/>']];
       const names = Object.keys(PKG_DB).sort(), has = n => api.jb.inst.includes(n);
       const meta = n => ({ v: PKG_DB[n][0], s: SEC[n] || 'Utilities', z: (n.length * 173 % 900 + 120) + ' KB' });
@@ -292,7 +319,7 @@ const CATALOG = [
       const row = n => `<div class='row pk' data-p='${n}'>${pi(n)}<div><span>${n}</span><small>${PKG_DB[n][1]}</small></div><span class='chev'>›</span></div>`;
       const list = a => `<div class='group'>${a.map(row).join('')}</div>`;
       const views = {
-        home: () => `<h2 class='lt'>Home</h2><div class='ban'><div style='background:linear-gradient(135deg,#8a7bff,#3b2fb8)'><b>Welcome to Sileo</b><small>Simulated package manager</small></div><div style='background:linear-gradient(135deg,#ff9f6b,#d6366b)'><b>Custom XH</b><small>Curated simulated packages</small></div></div><div class='gh'>Featured Packages</div>${list(['scrollanim', 'motionicons', 'neofetch', 'htop', 'git'])}<div class='gh'>Device</div><div class='group'><div class='row'><span>System</span><b>iOS Jailed Environment 1.0</b></div><div class='row'><span>Installed</span><b>${api.jb.inst.length} packages</b></div></div>`,
+        home: () => `<h2 class='lt'>Home</h2><div class='ban'><div style='background:linear-gradient(135deg,#8a7bff,#3b2fb8)'><b>Welcome to Sileo</b><small>Simulated package manager</small></div><div style='background:linear-gradient(135deg,#ff9f6b,#d6366b)'><b>Custom XH</b><small>Curated simulated packages</small></div></div><div class='gh'>Featured Packages</div>${list(['scrollanim', 'motionicons', 'zeptagonreborn', 'neofetch', 'htop', 'git'])}<div class='gh'>Device</div><div class='group'><div class='row'><span>System</span><b>iOS Jailed Environment 1.0</b></div><div class='row'><span>Installed</span><b>${api.jb.inst.length} packages</b></div></div>`,
         sources: () => `<h2 class='lt'>Sources</h2><div class='group'>${[['Procursus Inspired', 'simulated://procursus', BASE_PKGS.length, '#6a5cf0'], ['Custom XH', 'simulated://custom-xh', names.length - BASE_PKGS.length, '#d6366b']].map(r => `<div class='row pk'>${'<i class="pi" style="background:' + r[3] + '">' + r[0][0] + '</i>'}<div><span>${r[0]}</span><small>${r[1]}</small></div><small>${r[2]} packages</small></div>`).join('')}</div><div class='gf'>Sources are simulated. Nothing is downloaded.</div>`,
         changes: () => `<h2 class='lt'>Changes</h2><div class='gh'>Upgrades</div><div class='group'><div class='row'><span>All packages are up to date</span></div></div><div class='gh'>Recently Updated</div>${list(names)}`,
         packages: () => { const inst = names.filter(has), secs = [...new Set(inst.map(n => meta(n).s))].sort(); return `<h2 class='lt'>Packages</h2>` + secs.map(x => `<div class='gh'>${x}</div>${list(inst.filter(n => meta(n).s === x))}`).join(''); },
@@ -409,7 +436,7 @@ const CATALOG = [
     }
   }
 ];
-const PKG_DB = { scrollanim: ['1.0.0', 'Custom Home Screen and app-page scroll animations'], motionicons: ['1.0.0', 'Shake-controlled Home Screen icon physics using motion sensors'], bash: ['5.2.21', 'GNU Bourne Again Shell'], coreutils: ['9.4', 'Basic file and text utilities'], apt: ['2.7.6', 'Advanced package manager'], dpkg: ['1.22.4', 'Debian package manager'], sileo: ['2.5', 'Package manager'], newterm: ['2.1', 'Terminal emulator'], curl: ['8.5.0', 'Transfer data with URLs'], wget: ['1.21.4', 'Network file retriever'], nano: ['7.2', 'Small text editor'], vim: ['9.1', 'Vi improved editor'], git: ['2.43.0', 'Distributed version control'], neofetch: ['7.1.0', 'System information tool'], htop: ['3.3.0', 'Interactive process viewer'], python3: ['3.12.1', 'Python interpreter'], openssh: ['9.6', 'Secure shell client'] };
+const PKG_DB = { zeptagonreborn: ['1.0.0', 'Double-tap black hole effect that pulls in Home Screen icons and restores them on the next double tap'], scrollanim: ['1.0.0', 'Custom Home Screen and app-page scroll animations'], motionicons: ['1.0.0', 'Shake-controlled Home Screen icon physics using motion sensors'], bash: ['5.2.21', 'GNU Bourne Again Shell'], coreutils: ['9.4', 'Basic file and text utilities'], apt: ['2.7.6', 'Advanced package manager'], dpkg: ['1.22.4', 'Debian package manager'], sileo: ['2.5', 'Package manager'], newterm: ['2.1', 'Terminal emulator'], curl: ['8.5.0', 'Transfer data with URLs'], wget: ['1.21.4', 'Network file retriever'], nano: ['7.2', 'Small text editor'], vim: ['9.1', 'Vi improved editor'], git: ['2.43.0', 'Distributed version control'], neofetch: ['7.1.0', 'System information tool'], htop: ['3.3.0', 'Interactive process viewer'], python3: ['3.12.1', 'Python interpreter'], openssh: ['9.6', 'Secure shell client'] };
 const BASE_PKGS = ['bash', 'coreutils', 'apt', 'dpkg', 'sileo', 'newterm'];
 
 /* ============ HELPERS ============ */
@@ -431,11 +458,60 @@ function appNode(app, label = true) {
   return a;
 }
 
+/* Optional simulated App Store for standalone apps (not tweaks). */
+const HEXAGON_CATALOG = [
+  {
+    id: 'app.hexcalc', name: 'HexCalc', category: 'Utilities',
+    icon: { bg: 'linear-gradient(145deg,#4c596e,#172234)', svg: '<svg viewBox="0 0 60 60"><rect x="13" y="8" width="34" height="44" rx="7" fill="#fff"/><rect x="18" y="14" width="24" height="8" rx="2" fill="#a9d4ff"/><g fill="#4c596e"><circle cx="21" cy="30" r="3"/><circle cx="30" cy="30" r="3"/><circle cx="39" cy="30" r="3"/><circle cx="21" cy="40" r="3"/><circle cx="30" cy="40" r="3"/><rect x="36" y="36" width="6" height="8" rx="2"/></g></svg>' },
+    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>HexCalc</h1><p>A simple calculator app</p></div><div class="group"><div class="row"><span>Calculator</span><b>Ready</b></div></div><div class="gf">This is a lightweight demo app installed from Hexagon Store.</div>'; return e; }
+  },
+  {
+    id: 'app.focus', name: 'Focus Timer', category: 'Productivity',
+    icon: { bg: 'linear-gradient(145deg,#ff9a72,#e94b62)', svg: '<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="19" fill="none" stroke="#fff" stroke-width="4"/><path d="M30 20v13l9 5M23 7h14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>' },
+    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Focus Timer</h1><p>Stay focused, one session at a time.</p></div><div class="group"><div class="row"><span>Focus session</span><b>25 minutes</b></div><div class="row"><span>Break</span><b>5 minutes</b></div></div><div class="gf">Demo interface — timer controls are not connected yet.</div>'; return e; }
+  },
+  {
+    id: 'app.pocketnotes', name: 'Pocket Notes', category: 'Productivity',
+    icon: { bg: 'linear-gradient(145deg,#ffe27a,#f59e0b)', svg: '<svg viewBox="0 0 60 60"><rect x="14" y="9" width="32" height="42" rx="5" fill="#fff"/><path d="M21 21h18M21 29h18M21 37h13" stroke="#e69a00" stroke-width="3" stroke-linecap="round"/></svg>' },
+    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Pocket Notes</h1><p>Quick notes</p></div><div class="group"><textarea placeholder="Write a note…" style="width:100%;min-height:150px;padding:14px;border:0;background:transparent;color:var(--tx);font:16px var(--font);resize:vertical"></textarea></div><div class="gf">Notes are temporary in this demo.</div>'; return e; }
+  },
+  {
+    id: 'app.pixelweather', name: 'Pixel Weather', category: 'Weather',
+    icon: { bg: 'linear-gradient(145deg,#65c8ff,#3478e5)', svg: '<svg viewBox="0 0 60 60"><circle cx="23" cy="23" r="10" fill="#ffd45b"/><path d="M18 43h26a8 8 0 0 0 0-16 12 12 0 0 0-23-2 9 9 0 0 0-3 18" fill="#fff"/></svg>' },
+    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Pixel Weather</h1><p>Weather at a glance</p><div style="font-size:54px;font-weight:300;margin-top:16px">21°</div><b>Partly Cloudy</b></div><div class="group"><div class="row"><span>Today</span><b>18° / 23°</b></div><div class="row"><span>Tomorrow</span><b>17° / 22°</b></div></div><div class="gf">Illustrative weather data, not a live forecast.</div>'; return e; }
+  }
+];
+function installHexagonApp(id) {
+  const app = HEXAGON_CATALOG.find(a => a.id === id);
+  if (!app || byId(id)) return;
+  APPS.push(app); if (!JB.inst.includes('hexapp:' + id)) JB.inst.push('hexapp:' + id);
+  saveJB(); build();
+}
+const HEXAGON_APP = {
+  id: 'app.hexagonstore', name: 'Hexagon Store', category: 'Utilities',
+  icon: { bg: 'linear-gradient(145deg,#a78bfa,#6d28d9 58%,#32106b)', svg: '<svg viewBox="0 0 60 60"><path d="M30 7 48 17v26L30 53 12 43V17z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><path d="M30 7v20m18-10L30 27 12 17m18 10v26" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>' },
+  content(api) {
+    const el = document.createElement('div'); el.className = 'sl';
+    const cards = HEXAGON_CATALOG.map(a => {
+      const installed = !!byId(a.id);
+      return `<div class="row pk" style="align-items:center;gap:12px"><div class="ic" style="width:48px;flex:0 0 48px;background:${a.icon.bg}">${a.icon.svg}</div><div style="flex:1;min-width:0"><span>${a.name}</span><small>${a.category} · App</small></div><button class="gbtn" data-app="${a.id}" ${installed?'disabled':''}>${installed?'Installed':'Get'}</button></div>`;
+    }).join('');
+    el.innerHTML = `<div class="hero"><div class="ic" style="background:${this.icon.bg}">${this.icon.svg}</div><h1>Hexagon Store</h1><p>Apps for your jailbroken-style environment</p></div><div class="gh">Discover Apps</div><div class="group">${cards}</div><div class="gf">Hexagon Store distributes standalone apps only. Tweaks remain in Sileo. These apps are simulated and install locally in this HTML environment; no external repositories are contacted.</div>`;
+    el.querySelectorAll('[data-app]').forEach(b => b.addEventListener('click', () => {
+      installHexagonApp(b.dataset.app);
+      b.textContent = 'Installed'; b.disabled = true;
+    }));
+    return el;
+  }
+};
+function installHexagonStore() { if (!APPS.some(a=>a.id==='app.hexagonstore')) { APPS.push(HEXAGON_APP); build(); } if (!JB.inst.includes('hexagonstore')) JB.inst.push('hexagonstore'); saveJB(); }
+function removeHexagonStore() { const i=APPS.findIndex(a=>a.id==='app.hexagonstore'); if(i>=0) APPS.splice(i,1); JB.inst=JB.inst.filter(x=>x!=='hexagonstore'); saveJB(); build(); }
+
 /* ============ SIMULATED JAILBREAK STATE ============ */
 const JB = (() => { try { return Object.assign({ done: false, inst: [] }, JSON.parse(localStorage.getItem('ije.jb') || '{}')); } catch (e) { return { done: false, inst: [] }; } })();
 function saveJB() { try { localStorage.setItem('ije.jb', JSON.stringify(JB)); } catch (e) {} }
-function syncCatalog() { if (!JB.done) return false; let ch = false; CATALOG.forEach(a => { if (!byId(a.id)) { APPS.push(a); ch = true; } }); return ch; }
-function runJailbreak() { JB.done = true; JB.inst = [...new Set([...JB.inst, ...BASE_PKGS])]; saveJB(); if (syncCatalog()) build(); }
+function syncCatalog() { if (!JB.done) return false; let ch = false; CATALOG.forEach(a => { if (!byId(a.id)) { APPS.push(a); ch = true; } }); if (JB.inst.includes('hexagonstore') && !byId('app.hexagonstore')) { APPS.push(HEXAGON_APP); ch = true; } HEXAGON_CATALOG.forEach(a => { if (JB.inst.includes('hexapp:' + a.id) && !byId(a.id)) { APPS.push(a); ch = true; } }); return ch; }
+function runJailbreak() { JB.done = true; JB.inst = [...new Set([...JB.inst, ...BASE_PKGS])]; let selected = false; try { selected = localStorage.getItem('ije.installHexagon') === '1'; } catch (_) {} saveJB(); if (syncCatalog()) build(); if (selected) installHexagonStore(); }
 
 /* ============ WALLPAPER ============ */
 const WKEY = 'ije.wallpaper';
@@ -475,7 +551,7 @@ function makeDefaultWall() {
 }
 function applyWall() { wall.style.backgroundImage = `url(${customWall || defaultWall})`; }
 const TKEY = 'ije.tweaks';
-const TWEAKS = (() => { try { return Object.assign({ scrollStyle: 'ios', motionEnabled: false }, JSON.parse(localStorage.getItem(TKEY) || '{}')); } catch (e) { return { scrollStyle: 'ios', motionEnabled: false }; } })();
+const TWEAKS = (() => { try { return Object.assign({ scrollStyle: 'ios', motionEnabled: false, zeptagonEnabled: false }, JSON.parse(localStorage.getItem(TKEY) || '{}')); } catch (e) { return { scrollStyle: 'ios', motionEnabled: false, zeptagonEnabled: false }; } })();
 let physicsRunning = false, motionLast = 0, physicsItems = [], physicsFrame = 0, tiltX = 0, tiltY = 0, scrollMotionFrame = 0, lastMotionVector = null;
 function saveTweaks() { try { localStorage.setItem(TKEY, JSON.stringify(TWEAKS)); } catch (e) {} }
 function applyScrollStyle() {
@@ -572,6 +648,58 @@ function toggleIconPhysics() {
     showPhysicsHint('Icons returned to their original positions');
   }
 }
+/* ============ ZEPTAGON REBORN ============ */
+let zeptagonActive = false, zeptagonFrame = 0, zeptagonStart = 0, zeptagonCenter = { x: innerWidth/2, y: innerHeight/2 }, zeptagonNodes = [], zeptagonHole = null, lastHomeTap = 0;
+function setZeptagonEnabled(enabled) {
+  TWEAKS.zeptagonEnabled = !!enabled; saveTweaks();
+  if (!TWEAKS.zeptagonEnabled && zeptagonActive) toggleZeptagon();
+}
+function toggleZeptagon(x = innerWidth/2, y = innerHeight/2) {
+  if (!TWEAKS.zeptagonEnabled) return;
+  if (zeptagonActive) {
+    zeptagonActive = false; cancelAnimationFrame(zeptagonFrame);
+    zeptagonNodes.forEach(item => {
+      item.node.classList.remove('zeptagon-absorbed');
+      item.node.style.transition = 'transform .72s cubic-bezier(.2,.9,.25,1), opacity .48s ease';
+      item.node.style.transform = item.transform;
+      item.node.style.opacity = item.opacity;
+    });
+    if (zeptagonHole) { const oldHole=zeptagonHole; oldHole.style.transition='transform .55s ease,opacity .4s ease'; oldHole.style.transform='translate(-50%,-50%) scale(.05)'; oldHole.style.opacity='0'; setTimeout(()=>oldHole.remove(),580); }
+    zeptagonNodes=[]; zeptagonHole=null;
+    showPhysicsHint('ZeptagonReborn · Home Screen restored');
+    return;
+  }
+  if (physicsRunning) toggleIconPhysics();
+  zeptagonActive = true; zeptagonCenter = { x: clamp(x, 24, innerWidth-24), y: clamp(y, 70, innerHeight-110) }; zeptagonStart = performance.now();
+  zeptagonNodes = [...document.querySelectorAll('#home .app')].map(node => { const r=node.getBoundingClientRect(); return { node, transform: node.style.transform, opacity: node.style.opacity, baseX:r.left+r.width/2, baseY:r.top+r.height/2 }; });
+  zeptagonNodes.forEach(item => { item.node.classList.add('zeptagon-absorbed'); item.node.style.transition='none'; });
+  zeptagonHole=document.createElement('div'); zeptagonHole.className='zeptagon-hole'; zeptagonHole.style.left=zeptagonCenter.x+'px'; zeptagonHole.style.top=zeptagonCenter.y+'px'; document.querySelector('#screen').append(zeptagonHole);
+  showPhysicsHint('ZeptagonReborn · Black hole summoned');
+  const frame = now => {
+    if (!zeptagonActive) return;
+    const elapsed=(now-zeptagonStart)/1000, growth=Math.min(1,elapsed/3.4), radius=18+growth*Math.hypot(innerWidth,innerHeight)*.9;
+    zeptagonHole.style.opacity=String(Math.min(1,elapsed*2.8)); zeptagonHole.style.transform=`translate(-50%,-50%) scale(${.25+growth* Math.max(innerWidth,innerHeight)/18})`;
+    zeptagonNodes.forEach((item,i) => {
+      const dx=zeptagonCenter.x-item.baseX, dy=zeptagonCenter.y-item.baseY, dist=Math.max(1,Math.hypot(dx,dy));
+      const influence=clamp((radius+Math.min(innerWidth,innerHeight)*.34-dist)/(Math.min(innerWidth,innerHeight)*.48),0,1);
+      const pull= Math.pow(influence,1.45);
+      const spin=(1-pull)*Math.sin(elapsed*2+i*.7)*10;
+      const tx=dx*pull*.94, ty=dy*pull*.94;
+      item.node.style.transform=`translate3d(${tx}px,${ty}px,0) rotate(${spin+pull*260}deg) scale(${1-pull*.92})`;
+      item.node.style.opacity=String(1-pull*.98);
+    });
+    zeptagonFrame=requestAnimationFrame(frame);
+  };
+  zeptagonFrame=requestAnimationFrame(frame);
+}
+function handleZeptagonTap(e) {
+  if (!TWEAKS.zeptagonEnabled || current || zeptagonNodes.length && !zeptagonActive) return;
+  if (e.target.closest('.app') || e.target.closest('#dots') || e.target.closest('#hi')) return;
+  const now=Date.now();
+  if (now-lastHomeTap<360) { lastHomeTap=0; e.preventDefault(); e.stopPropagation(); toggleZeptagon(e.clientX,e.clientY); }
+  else lastHomeTap=now;
+}
+
 function handleDeviceMotion(e) {
   if (!TWEAKS.motionEnabled) return;
   const a=e.accelerationIncludingGravity || e.acceleration;
@@ -596,6 +724,7 @@ function handleDeviceMotion(e) {
 const api = {
   tweaks: TWEAKS,
   setScrollStyle(value) { TWEAKS.scrollStyle = value; saveTweaks(); applyScrollStyle(); },
+  setZeptagonEnabled(value) { setZeptagonEnabled(value); },
   async enableMotion() {
     if (!('DeviceMotionEvent' in window)) { TWEAKS.motionPermission = 'Not supported'; return false; }
     try {
@@ -771,6 +900,7 @@ document.addEventListener('click', e => {
   const t = e.target.closest('#home [data-id]'); if (!t) return;
   openApp(t.dataset.id, t.querySelector('.ic') || t);
 });
+['pointerup'].forEach(type => { pager.addEventListener(type, handleZeptagonTap, true); dock.addEventListener(type, handleZeptagonTap, true); });
 
 /* ============ HOME INDICATOR ============ */
 let hy = null, ht = 0, hv = 0, hp = 0;
