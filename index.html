@@ -186,6 +186,9 @@ const APPS = [
         </div>
         <div class="gf">Pick an image from your device. It stays on this device and is used on the Home Screen and App Library.</div>
         <div id="tweak-settings"></div>
+        <div class="gh">Reset Environment</div>
+        <div class="group"><button id="factory-reset" class="gbtn rm" style="display:block;width:100%;padding:13px 16px;border-radius:12px;font-size:15px;text-align:center">Erase Everything &amp; Restore Original iOS</button></div>
+        <div class="gf">Deletes simulated jailbreak packages, downloaded apps, tweaks, custom wallpaper and saved settings. The environment returns to its original Home Screen. This cannot erase anything from your real iPhone.</div>
         <input id="wfile" type="file" accept="image/*" hidden>`;
       const th = el.querySelector('#wthumb'), rs = el.querySelector('#wreset');
       const sa = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -196,6 +199,9 @@ const APPS = [
       });
       rs.addEventListener('click', () => { api.resetWallpaper(); sync(); });
       sync();
+      el.querySelector('#factory-reset').addEventListener('click', () => {
+        if (confirm('Erase all simulated apps, tweaks, jailbreak data and customizations, then restore the original Home Screen?')) api.factoryReset();
+      });
       const settings = el.querySelector('#tweak-settings');
       const installed = api.jb.inst;
       if (installed.includes('scrollanim') || installed.includes('motionicons') || installed.includes('zeptagonreborn')) {
@@ -302,6 +308,9 @@ const APPS = [
     }
   }
 ];
+
+// Keep the original factory Home Screen so the Info app can restore this exact starting state.
+const ORIGINAL_APP_IDS = new Set(APPS.map(app => app.id));
 
 /* Installable apps: added to APPS by the simulated jailbreak (plikzach). */
 const CATALOG = [
@@ -463,22 +472,48 @@ const HEXAGON_CATALOG = [
   {
     id: 'app.hexcalc', name: 'HexCalc', category: 'Utilities',
     icon: { bg: 'linear-gradient(145deg,#4c596e,#172234)', svg: '<svg viewBox="0 0 60 60"><rect x="13" y="8" width="34" height="44" rx="7" fill="#fff"/><rect x="18" y="14" width="24" height="8" rx="2" fill="#a9d4ff"/><g fill="#4c596e"><circle cx="21" cy="30" r="3"/><circle cx="30" cy="30" r="3"/><circle cx="39" cy="30" r="3"/><circle cx="21" cy="40" r="3"/><circle cx="30" cy="40" r="3"/><rect x="36" y="36" width="6" height="8" rx="2"/></g></svg>' },
-    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>HexCalc</h1><p>A simple calculator app</p></div><div class="group"><div class="row"><span>Calculator</span><b>Ready</b></div></div><div class="gf">This is a lightweight demo app installed from Hexagon Store.</div>'; return e; }
+    content() {
+      const e=document.createElement('div');
+      e.innerHTML=`<div class="hero"><h1>HexCalc</h1><p>A pocket calculator</p></div><div style="margin:0 18px 14px;padding:18px 16px;border-radius:18px;background:var(--cell);box-shadow:0 1px 5px #0001;text-align:right"><div id="calc-history" style="min-height:18px;color:var(--sec);font-size:13px;word-break:break-all"></div><div id="calc-display" style="font-size:38px;font-weight:300;min-height:48px;overflow-wrap:anywhere">0</div></div><div id="calc-keys" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 18px 18px">${['AC','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='].map(k=>`<button data-key="${k}" style="border:0;border-radius:16px;min-height:58px;background:${['÷','×','−','+','='].includes(k)?'#ff9f0a':['AC','±','%','⌫'].includes(k)?'var(--lz)':'var(--cell)'};color:${['÷','×','−','+','='].includes(k)?'#fff':'var(--tx)'};font:600 23px var(--font)">${k}</button>`).join('')}</div><div class="gf">Calculations run locally on this device.</div>`;
+      let expr='', fresh=false; const display=e.querySelector('#calc-display'), history=e.querySelector('#calc-history');
+      const paint=()=>{display.textContent=expr||'0';};
+      e.querySelector('#calc-keys').addEventListener('click',ev=>{const b=ev.target.closest('[data-key]');if(!b)return;const k=b.dataset.key;
+        if(k==='AC'){expr='';history.textContent='';fresh=false;}
+        else if(k==='⌫'){expr=expr.slice(0,-1);}
+        else if(k==='±'){if(!expr)expr='-';else if(/^-?\d*\.?\d+$/.test(expr))expr=String(-Number(expr));}
+        else if(k==='%'){if(/\d$/.test(expr))expr=String(Number(expr)/100);}
+        else if(k==='='){try{const safe=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/[−]/g,'-');if(!safe||!/^[0-9+*/.()\- ]+$/.test(safe))throw Error();const result=Function('"use strict";return ('+safe+')')();if(!Number.isFinite(result))throw Error();history.textContent=expr+' =';expr=String(Number(result.toPrecision(10)));fresh=true;}catch(_){display.textContent='Error';expr='';fresh=true;return;}}
+        else {if(fresh&&!['+','−','×','÷'].includes(k))expr='';fresh=false;if(expr.length<28)expr+=k;}
+        paint();
+      }); return e;
+    }
   },
   {
     id: 'app.focus', name: 'Focus Timer', category: 'Productivity',
     icon: { bg: 'linear-gradient(145deg,#ff9a72,#e94b62)', svg: '<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="19" fill="none" stroke="#fff" stroke-width="4"/><path d="M30 20v13l9 5M23 7h14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>' },
-    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Focus Timer</h1><p>Stay focused, one session at a time.</p></div><div class="group"><div class="row"><span>Focus session</span><b>25 minutes</b></div><div class="row"><span>Break</span><b>5 minutes</b></div></div><div class="gf">Demo interface — timer controls are not connected yet.</div>'; return e; }
+    content() {
+      const e=document.createElement('div');e.innerHTML=`<div class="hero"><h1>Focus Timer</h1><p>Make a little progress, then take a break.</p></div><div style="margin:0 18px 16px;padding:25px 18px;border-radius:24px;background:var(--cell);text-align:center"><div id="timer-mode" style="color:var(--sec);font-weight:600">FOCUS</div><div id="timer-readout" style="font-size:64px;letter-spacing:-2px;font-weight:200;font-variant-numeric:tabular-nums;margin:8px 0">25:00</div><div style="display:flex;justify-content:center;gap:10px"><button id="timer-start" class="gbtn">Start</button><button id="timer-reset" class="gbtn rm">Reset</button></div></div><div class="group"><div class="row"><span>Session length</span><select id="timer-length" style="border:0;background:transparent;color:var(--blue);font:16px var(--font)"><option value="1500">25 minutes</option><option value="900">15 minutes</option><option value="3000">50 minutes</option></select></div><div class="row"><span>Switch to</span><button id="timer-break" class="gbtn">5 min break</button></div></div><div class="gf">The timer keeps counting while this app is open. Finishing a session gives you a little celebration.</div>`;
+      let total=1500,remaining=total,deadline=0,interval=null,running=false,mode='FOCUS';const read=e.querySelector('#timer-readout'),start=e.querySelector('#timer-start'),modeEl=e.querySelector('#timer-mode');
+      const paint=()=>{read.textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');start.textContent=running?'Pause':'Start';modeEl.textContent=mode;};
+      const stop=()=>{if(interval)clearInterval(interval);interval=null;running=false;};
+      const tick=()=>{remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(!remaining){stop();read.textContent='00:00';start.textContent='Start';modeEl.textContent=mode+' COMPLETE 🎉';if(navigator.vibrate)navigator.vibrate([100,60,100]);return;}paint();};
+      start.addEventListener('click',()=>{if(running){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));stop();paint();}else{running=true;deadline=Date.now()+remaining*1000;paint();interval=setInterval(tick,250);}});
+      e.querySelector('#timer-reset').addEventListener('click',()=>{stop();remaining=total;paint();});
+      e.querySelector('#timer-length').addEventListener('change',ev=>{stop();mode='FOCUS';total=Number(ev.target.value);remaining=total;paint();});
+      e.querySelector('#timer-break').addEventListener('click',()=>{stop();mode='BREAK';total=300;remaining=total;paint();});
+      paint();return e;
+    }
   },
   {
     id: 'app.pocketnotes', name: 'Pocket Notes', category: 'Productivity',
     icon: { bg: 'linear-gradient(145deg,#ffe27a,#f59e0b)', svg: '<svg viewBox="0 0 60 60"><rect x="14" y="9" width="32" height="42" rx="5" fill="#fff"/><path d="M21 21h18M21 29h18M21 37h13" stroke="#e69a00" stroke-width="3" stroke-linecap="round"/></svg>' },
-    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Pocket Notes</h1><p>Quick notes</p></div><div class="group"><textarea placeholder="Write a note…" style="width:100%;min-height:150px;padding:14px;border:0;background:transparent;color:var(--tx);font:16px var(--font);resize:vertical"></textarea></div><div class="gf">Notes are temporary in this demo.</div>'; return e; }
+    content() { const e=document.createElement('div');e.innerHTML=`<div class="hero"><h1>Pocket Notes</h1><p>Your thoughts, saved automatically.</p></div><div class="group" style="margin:0 16px"><textarea id="pocket-note" placeholder="Write a note…" style="width:100%;min-height:220px;padding:16px;border:0;outline:0;background:transparent;color:var(--tx);font:16px/1.5 var(--font);resize:vertical;-webkit-user-select:text;user-select:text"></textarea></div><div class="row" style="margin:10px 16px"><span id="note-status" style="color:var(--sec);font-size:13px">Saved on this device</span><button id="note-clear" class="gbtn rm">Clear</button></div><div class="gf">Your note is saved automatically in this browser and stays here when you reopen the app.</div>`;const t=e.querySelector('#pocket-note'),status=e.querySelector('#note-status');try{t.value=localStorage.getItem('ije.pocketNotes')||'';}catch(_){}let save; t.addEventListener('input',()=>{status.textContent='Saving…';clearTimeout(save);save=setTimeout(()=>{try{localStorage.setItem('ije.pocketNotes',t.value);status.textContent='Saved';}catch(_){status.textContent='Could not save';}},180);});e.querySelector('#note-clear').addEventListener('click',()=>{t.value='';try{localStorage.removeItem('ije.pocketNotes');}catch(_){}status.textContent='Note cleared';});return e; }
   },
   {
     id: 'app.pixelweather', name: 'Pixel Weather', category: 'Weather',
     icon: { bg: 'linear-gradient(145deg,#65c8ff,#3478e5)', svg: '<svg viewBox="0 0 60 60"><circle cx="23" cy="23" r="10" fill="#ffd45b"/><path d="M18 43h26a8 8 0 0 0 0-16 12 12 0 0 0-23-2 9 9 0 0 0-3 18" fill="#fff"/></svg>' },
-    content() { const e=document.createElement('div'); e.innerHTML='<div class="hero"><h1>Pixel Weather</h1><p>Weather at a glance</p><div style="font-size:54px;font-weight:300;margin-top:16px">21°</div><b>Partly Cloudy</b></div><div class="group"><div class="row"><span>Today</span><b>18° / 23°</b></div><div class="row"><span>Tomorrow</span><b>17° / 22°</b></div></div><div class="gf">Illustrative weather data, not a live forecast.</div>'; return e; }
+    content() { const e=document.createElement('div');e.innerHTML=`<div class="hero"><h1>Pixel Weather</h1><p>Pick a city for a tiny forecast</p><div id="weather-icon" style="font-size:64px;margin-top:12px">🌤️</div><div id="weather-temp" style="font-size:58px;font-weight:250;line-height:1.1">21°</div><b id="weather-desc">Partly cloudy</b></div><div class="group" style="margin:0 16px"><div class="row"><label for="weather-city">City</label><input id="weather-city" value="Paris" maxlength="32" style="width:55%;border:0;outline:0;background:transparent;color:var(--blue);font:16px var(--font);text-align:right;-webkit-user-select:text;user-select:text"></div><div class="row"><span>Today</span><b id="weather-today">18° / 23°</b></div><div class="row"><span>Tomorrow</span><b id="weather-tomorrow">17° / 22°</b></div></div><div style="padding:18px;text-align:center"><button id="weather-refresh" class="gbtn">Refresh forecast ↻</button></div><div class="gf">A playful sample forecast, not live meteorological data. Refresh to roll a new weather pattern.</div>`;
+      const patterns=[['☀️','Sunny',24,19,27,20],['🌧️','Rain showers',14,12,17,13],['⛅','Partly cloudy',21,18,23,17],['🌨️','Snow flurries',2,-1,4,0],['🌩️','Thunderstorms',19,16,22,15],['🌫️','Foggy',11,9,14,10],['🌈','Rainbow skies',22,18,25,19]];const city=e.querySelector('#weather-city');try{city.value=localStorage.getItem('ije.weatherCity')||'Paris';}catch(_){}const update=()=>{const p=patterns[Math.floor(Math.random()*patterns.length)];e.querySelector('#weather-icon').textContent=p[0];e.querySelector('#weather-desc').textContent=p[1];e.querySelector('#weather-temp').textContent=p[2]+'°';e.querySelector('#weather-today').textContent=p[3]+'° / '+p[4]+'°';e.querySelector('#weather-tomorrow').textContent=p[5]+'° / '+(p[5]+4)+'°';};city.addEventListener('change',()=>{try{localStorage.setItem('ije.weatherCity',city.value.trim()||'Paris');}catch(_){} });e.querySelector('#weather-refresh').addEventListener('click',update);update();return e; }
   }
 ];
 function installHexagonApp(id) {
@@ -752,6 +787,16 @@ const api = {
     applyWall();
   },
   resetWallpaper() { customWall = null; try { localStorage.removeItem(WKEY); } catch (e) {} applyWall(); },
+  factoryReset() {
+    // Stop active visual effects and sensor listeners before restoring the original registry.
+    if (physicsRunning) toggleIconPhysics();
+    if (zeptagonActive) { zeptagonActive = false; cancelAnimationFrame(zeptagonFrame); if (zeptagonHole) zeptagonHole.remove(); zeptagonHole = null; zeptagonNodes = []; }
+    window.removeEventListener('devicemotion', handleDeviceMotion, true);
+    try { for (let i=localStorage.length-1;i>=0;i--) { const key=localStorage.key(i); if (key && (key.startsWith('ije.') || key.startsWith('app.'))) localStorage.removeItem(key); } } catch (e) {}
+    JB.done = false; JB.inst = []; TWEAKS.scrollStyle='ios'; TWEAKS.motionEnabled=false; TWEAKS.zeptagonEnabled=false; delete TWEAKS.motionPermission;
+    APPS.splice(0, APPS.length, ...APPS.filter(a => ORIGINAL_APP_IDS.has(a.id)));
+    customWall = null; location.reload();
+  },
   close: () => closeApp(), jb: JB, saveJB, runJailbreak
 };
 
