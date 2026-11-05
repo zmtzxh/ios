@@ -92,15 +92,13 @@ body.inapp #hi{height:calc(max(var(--safe-b),34px*var(--k)) + 56px*var(--k))}
 .pk{padding:10px 16px;min-height:62px}.pk div{display:flex;flex-direction:column;gap:2px;min-width:0}.pk small{color:var(--sec);font-size:13px}.gbtn{background:rgba(0,122,255,.14);color:var(--blue);font-weight:600;font-size:14px;border-radius:16px;padding:5px 14px;min-width:72px;text-align:center;cursor:pointer;flex:none;box-shadow:inset 0 0 0 .5px rgba(0,122,255,.22),inset 1px 1px 1px -.5px rgba(255,255,255,.9)}.gbtn.rm{color:#ff3b30;background:rgba(255,59,48,.12)}.gbtn.dis{opacity:.5;pointer-events:none}
 .bar{height:6px;border-radius:3px;background:var(--sep);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:3px;transition:width .5s var(--ease)}.jbtnw{padding:14px 16px 0}.jbtn{position:relative;width:100%;height:52px;border:0;border-radius:26px;background:linear-gradient(180deg,rgba(80,170,255,.98),rgba(0,104,235,.98));color:#fff;font:600 17px var(--font);cursor:pointer;box-shadow:inset 2px 2px 3px -2px rgba(255,255,255,.9),inset -2px -2px 4px -2px rgba(255,255,255,.5),inset 0 -10px 18px -10px rgba(0,60,170,.5),0 10px 24px -8px rgba(0,122,255,.6);transition:transform .15s,opacity .2s}.jbtn:active{transform:scale(.97)}.jbtn:disabled{opacity:.5}
 #appview.dark{--bg:#000;--cell:#1c1c1e;--tx:#fff;--sec:#8e8e93;--sep:rgba(84,84,88,.6);--nav:rgba(0,0,0,.7);--gl:rgba(44,44,48,.6);--lz:rgba(255,255,255,.14)}body.dk #hi i{background:#fff}
-/* Installed tweak previews: configurable app-page scroll motion and icon physics. */
-#ascroll.fx-fade .sv,#ascroll.fx-fade .hero,#ascroll.fx-fade .group{animation:fxFade .42s both}
-#ascroll.fx-slide .sv,#ascroll.fx-slide .hero,#ascroll.fx-slide .group{animation:fxSlide .46s cubic-bezier(.2,.9,.25,1) both}
-#ascroll.fx-zoom .sv,#ascroll.fx-zoom .hero,#ascroll.fx-zoom .group{animation:fxZoom .42s cubic-bezier(.2,.9,.25,1) both}
-@keyframes fxFade{from{opacity:.25;transform:translateY(9px)}to{opacity:1;transform:none}}
-@keyframes fxSlide{from{opacity:.35;transform:translateX(22px)}to{opacity:1;transform:none}}
-@keyframes fxZoom{from{opacity:.3;transform:scale(.965)}to{opacity:1;transform:scale(1)}}
-.app.physics-active{z-index:30;position:relative;filter:drop-shadow(0 12px 14px rgba(0,0,0,.28))}
-.app.physics-active .ic{transition:filter .12s}
+/* Installed tweak previews: scroll-responsive motion and icon physics. */
+#ascroll.fx-fade .sv,#ascroll.fx-fade .hero,#ascroll.fx-fade .group,#ascroll.fx-fade .gh,#ascroll.fx-fade .gf{will-change:opacity,transform}
+#ascroll.fx-slide .sv,#ascroll.fx-slide .hero,#ascroll.fx-slide .group,#ascroll.fx-slide .gh,#ascroll.fx-slide .gf{will-change:opacity,transform}
+#ascroll.fx-zoom .sv,#ascroll.fx-zoom .hero,#ascroll.fx-zoom .group,#ascroll.fx-zoom .gh,#ascroll.fx-zoom .gf{will-change:opacity,transform}
+#ascroll.fx-ios{scroll-behavior:smooth;scroll-snap-type:y proximity}
+.app.physics-active{z-index:30;position:relative;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3));will-change:transform}
+.app.physics-active .ic{transition:filter .12s;pointer-events:none}
 .physics-hint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:60;padding:9px 14px;border-radius:20px;background:rgba(20,20,24,.72);color:#fff;font:500 13px var(--font);backdrop-filter:blur(18px);pointer-events:none;white-space:nowrap}
 
 .term{padding:2px 16px 0;font:13.5px/1.45 ui-monospace,"SF Mono",Menlo,monospace;color:#e6e6e6;min-height:100%;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}.term .p{color:#5ef08a;white-space:nowrap}.term .d{color:#8e8e93}.tl{display:flex;gap:7px}.term input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:16px ui-monospace,Menlo,monospace;padding:0}
@@ -478,11 +476,32 @@ function makeDefaultWall() {
 function applyWall() { wall.style.backgroundImage = `url(${customWall || defaultWall})`; }
 const TKEY = 'ije.tweaks';
 const TWEAKS = (() => { try { return Object.assign({ scrollStyle: 'ios', motionEnabled: false }, JSON.parse(localStorage.getItem(TKEY) || '{}')); } catch (e) { return { scrollStyle: 'ios', motionEnabled: false }; } })();
-let physicsRunning = false, motionLast = 0, motionHits = 0, motionTimer = null, physicsItems = [];
+let physicsRunning = false, motionLast = 0, physicsItems = [], physicsFrame = 0, tiltX = 0, tiltY = 0, scrollMotionFrame = 0, lastMotionVector = null;
 function saveTweaks() { try { localStorage.setItem(TKEY, JSON.stringify(TWEAKS)); } catch (e) {} }
 function applyScrollStyle() {
-  ascroll.classList.remove('fx-fade', 'fx-slide', 'fx-zoom');
-  if (TWEAKS.scrollStyle && TWEAKS.scrollStyle.startsWith('fx-')) ascroll.classList.add(TWEAKS.scrollStyle);
+  ascroll.classList.remove('fx-fade', 'fx-slide', 'fx-zoom', 'fx-ios');
+  const mode = TWEAKS.scrollStyle || 'ios';
+  if (mode === 'ios') ascroll.classList.add('fx-ios');
+  else if (mode.startsWith('fx-')) ascroll.classList.add(mode);
+  updateScrollMotion();
+}
+function updateScrollMotion() {
+  if (scrollMotionFrame) return;
+  scrollMotionFrame = requestAnimationFrame(() => {
+    scrollMotionFrame = 0;
+    const mode = TWEAKS.scrollStyle || 'ios';
+    const nodes = ascroll.querySelectorAll('.sv,.hero,.group,.gh,.gf');
+    nodes.forEach(node => {
+      node.style.opacity = ''; node.style.transform = '';
+      if (!mode.startsWith('fx-')) return;
+      const r = node.getBoundingClientRect(), h = innerHeight || 800;
+      const center = r.top + r.height * .5;
+      const distance = Math.min(1, Math.abs(center - h * .48) / (h * .72));
+      if (mode === 'fx-fade') node.style.opacity = String(1 - distance * .62);
+      else if (mode === 'fx-slide') node.style.transform = `translate3d(${(center < h*.48 ? -1 : 1) * distance * 24}px,0,0)`;
+      else if (mode === 'fx-zoom') node.style.transform = `scale(${1 - distance * .055})`;
+    });
+  });
 }
 function showPhysicsHint(message) {
   let h = document.querySelector('.physics-hint');
@@ -493,49 +512,85 @@ function showPhysicsHint(message) {
 function toggleIconPhysics() {
   physicsRunning = !physicsRunning;
   if (physicsRunning) {
-    physicsItems = [...document.querySelectorAll('#home .app')].map((node, i) => {
+    const nodes = [...document.querySelectorAll('#home .app')];
+    physicsItems = nodes.map((node, i) => {
       const rect = node.getBoundingClientRect();
-      const item = { node, x: 0, y: 0, vx: (Math.random() - .5) * 15, vy: -2 - Math.random() * 9, rot: (Math.random() - .5) * 24, vr: (Math.random() - .5) * 8, homeX: rect.left, homeY: rect.top, i };
+      const w = rect.width || 60, h = rect.height || 73;
+      const item = { node, x: 0, y: 0, vx: (Math.random()-.5)*90, vy: -40-Math.random()*80, rot: 0, vr: (Math.random()-.5)*100, w, h, radius: Math.max(w,h)*.43, homeX: rect.left, homeY: rect.top, i };
       node.classList.add('physics-active');
-      node.style.transition = 'transform .25s cubic-bezier(.2,.8,.2,1)';
-      node.style.transform = `translate3d(${item.vx * 3}px,${item.vy * 3}px,0) rotate(${item.rot}deg)`;
+      node.style.transition = 'none';
       return item;
     });
-    showPhysicsHint('Icon physics active · shake to reset');
+    showPhysicsHint('Physics active · tilt to move · shake to reset');
     let last = performance.now();
     const frame = now => {
       if (!physicsRunning) return;
-      const dt = Math.min(.032, (now - last) / 1000); last = now;
-      const bounds = { w: innerWidth, h: innerHeight };
-      physicsItems.forEach(p => {
-        p.vy += 520 * dt; p.vx *= .995; p.vy *= .995;
-        p.x += p.vx * dt * 10; p.y += p.vy * dt * 10; p.rot += p.vr * dt * 8;
-        if (p.x < -45 || p.x > bounds.w - 30) { p.vx *= -.72; p.x = clamp(p.x, -45, bounds.w - 30); }
-        if (p.y < -25 || p.y > bounds.h - 130) { p.vy *= -.72; p.y = clamp(p.y, -25, bounds.h - 130); p.vr *= .8; }
-        p.node.style.transition = 'none';
-        p.node.style.transform = `translate3d(${p.x}px,${p.y}px,0) rotate(${p.rot}deg)`;
-      });
-      requestAnimationFrame(frame);
+      const dt = Math.min(.028, Math.max(.001, (now-last)/1000)); last = now;
+      const w = innerWidth, h = innerHeight;
+      // Device orientation/acceleration is converted into a screen-space gravity vector.
+      const gx = tiltX * 1050, gy = tiltY * 1050 + 360;
+      for (const p of physicsItems) {
+        p.vx += gx * dt; p.vy += gy * dt;
+        p.vx *= Math.pow(.997, dt*60); p.vy *= Math.pow(.998, dt*60);
+        p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt;
+        const minX = -p.homeX + 5, maxX = w - p.homeX - p.w - 5;
+        const minY = -p.homeY + 5, maxY = h - p.homeY - p.h - 90;
+        if (p.x < minX) { p.x=minX; p.vx=Math.abs(p.vx)*.72; }
+        if (p.x > maxX) { p.x=maxX; p.vx=-Math.abs(p.vx)*.72; }
+        if (p.y < minY) { p.y=minY; p.vy=Math.abs(p.vy)*.68; }
+        if (p.y > maxY) { p.y=maxY; p.vy=-Math.abs(p.vy)*.62; p.vx*=.94; p.vr*=.96; }
+      }
+      // Circle-based pair collisions: icons push apart and exchange velocity along the collision normal.
+      for (let i=0; i<physicsItems.length; i++) for (let j=i+1; j<physicsItems.length; j++) {
+        const a=physicsItems[i], b=physicsItems[j];
+        const ax=a.homeX+a.w/2+a.x, ay=a.homeY+a.h/2+a.y;
+        const bx=b.homeX+b.w/2+b.x, by=b.homeY+b.h/2+b.y;
+        let dx=bx-ax, dy=by-ay, dist=Math.hypot(dx,dy), min=a.radius+b.radius;
+        if (dist < min) {
+          if (dist < .001) { dx=.01; dy=.01; dist=.014; }
+          const nx=dx/dist, ny=dy/dist, overlap=min-dist;
+          a.x -= nx*overlap*.5; a.y -= ny*overlap*.5;
+          b.x += nx*overlap*.5; b.y += ny*overlap*.5;
+          const rel=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+          if (rel < 0) { const impulse=-(1+.48)*rel*.5; a.vx-=impulse*nx; a.vy-=impulse*ny; b.vx+=impulse*nx; b.vy+=impulse*ny; }
+          a.vr += (ny*nx)*8; b.vr -= (ny*nx)*8;
+        }
+      }
+      for (const p of physicsItems) p.node.style.transform=`translate3d(${p.x}px,${p.y}px,0) rotate(${p.rot}deg)`;
+      physicsFrame=requestAnimationFrame(frame);
     };
-    requestAnimationFrame(frame);
+    physicsFrame=requestAnimationFrame(frame);
   } else {
+    cancelAnimationFrame(physicsFrame);
     physicsItems.forEach(p => {
-      p.node.style.transition = 'transform .55s cubic-bezier(.2,.9,.25,1)';
+      p.node.style.transition = 'transform .6s cubic-bezier(.2,.9,.25,1)';
       p.node.style.transform = '';
       p.node.classList.remove('physics-active');
+      setTimeout(() => { p.node.style.transition=''; }, 650);
     });
     physicsItems = [];
     showPhysicsHint('Icons returned to their original positions');
   }
 }
 function handleDeviceMotion(e) {
-  if (!TWEAKS.motionEnabled || !e.accelerationIncludingGravity) return;
-  const a = e.accelerationIncludingGravity;
-  const magnitude = Math.sqrt((a.x || 0) ** 2 + (a.y || 0) ** 2 + (a.z || 0) ** 2);
-  const now = Date.now();
-  if (magnitude > 23 && now - motionLast > 900) {
-    motionLast = now;
-    toggleIconPhysics();
+  if (!TWEAKS.motionEnabled) return;
+  const a=e.accelerationIncludingGravity || e.acceleration;
+  if (a) {
+    // Normalise gravity so the icons roll toward the side the phone is tilted toward.
+    const ax=Number(a.x)||0, ay=Number(a.y)||0;
+    tiltX=Math.max(-1.25,Math.min(1.25,ax/9.81));
+    tiltY=Math.max(-1.25,Math.min(1.25,-ay/9.81));
+    // Use linear acceleration when available; otherwise detect a sharp change in the gravity vector.
+    let shake=0;
+    if (e.acceleration && [e.acceleration.x,e.acceleration.y,e.acceleration.z].some(v => v != null)) {
+      shake=Math.hypot(Number(e.acceleration.x)||0,Number(e.acceleration.y)||0,Number(e.acceleration.z)||0);
+    } else {
+      const v=[ax,ay,Number(a.z)||0];
+      if (lastMotionVector) shake=Math.hypot(v[0]-lastMotionVector[0],v[1]-lastMotionVector[1],v[2]-lastMotionVector[2]);
+      lastMotionVector=v;
+    }
+    const now=Date.now();
+    if (shake > 13 && now-motionLast > 1100) { motionLast=now; toggleIconPhysics(); }
   }
 }
 const api = {
@@ -684,7 +739,7 @@ function openApp(id, el) {
   if (closing) { view.removeEventListener('transitionend', finFn); clearTimeout(finT); closing = false; }
   busy = true; current = app; srcEl = el; srcRect = settledRect(el);
   ascroll.innerHTML = ''; const c = app.content(api); ascroll.append(c instanceof Node ? c : Object.assign(document.createElement('div'), { innerHTML: c }));
-  ascroll.scrollTop = 0; nav.classList.remove('on'); $('#ntitle').textContent = app.name;
+  ascroll.scrollTop = 0; nav.classList.remove('on'); $('#ntitle').textContent = app.name; requestAnimationFrame(updateScrollMotion);
   const k = collapsedTransform(iconRect());
   splash.style.background = app.icon.bg; splash.innerHTML = app.icon.svg; if (!reopen) { splash.style.transition = 'none'; splash.style.opacity = 1; }
   view.style.display = 'block'; if (!reopen) view.style.transition = 'none';
@@ -711,7 +766,7 @@ function closeApp() {
   };
   view.addEventListener('transitionend', fin); finT = setTimeout(fin, 520);
 }
-ascroll.addEventListener('scroll', () => nav.classList.toggle('on', ascroll.scrollTop > 60), { passive: true });
+ascroll.addEventListener('scroll', () => { nav.classList.toggle('on', ascroll.scrollTop > 60); updateScrollMotion(); }, { passive: true });
 document.addEventListener('click', e => {
   const t = e.target.closest('#home [data-id]'); if (!t) return;
   openApp(t.dataset.id, t.querySelector('.ic') || t);
